@@ -1,0 +1,75 @@
+# Application name
+spring:
+  application:
+    name: ph-story-discovery-server
+  profiles:
+    active: "dev"
+
+# Server port
+server:
+  port: 9761
+
+# Eureka config
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    healthcheck:
+      enabled: true
+  instance:
+    prefer-ip-address: true
+    statusPageUrlPath: /actuator/info
+    healthCheckUrlPath: /actuator/health
+  server:
+    wait-time-in-ms-when-sync-empty: 10
+    #enable-self-being: true
+    enable-self-preservation: true
+
+# Auto delete service not use
+#eureka.server.enable-self-being=true
+
+# EUREKA The client takes more time to send the heart to the EUREKA server, indicating that he is still alive, default 30 seconds
+#eureka.instance.lease-renewal-interval-in-seconds: 5
+# EUREKA Server After accepting the heartbeat of the power, you need to wait for how long you can delete this instance 90 seconds.
+#eureka.instance.lease-expiration-duration-in-seconds: 15
+
+#Here we configure to detect once every second to drive out the invalid instance
+#eureka.server.eviction-interval-timer-in-ms=1000
+#Turn off the first level cache, let the client read directly from the second level cache, save the synchronization time between the caches
+#eureka.server.use-read-only-response-cache=false
+
+---
+spring:
+  config:
+    activate:
+      on-profile: "dev"
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    service-url:
+      defaultZone: http://localhost:9761/eureka
+
+---
+spring:
+  config:
+    activate:
+      on-profile: "prod"
+eureka:
+  instance:
+    hostname: ph-story-discovery-server
+  client:
+    service-url:
+      defaultZone: http://ph-story-discovery-server:9761/eureka
+
+---
+spring:
+  config:
+    activate:
+      on-profile: "k8s"
+eureka:
+  instance:
+    hostname: ph-story-discovery-server #"${HOSTNAME}.eureka"
+  client:
+    service-url:
+      defaultZone: http://ph-story-discovery-server:9761/eureka #${EUREKA_SERVER_ADDRESS}

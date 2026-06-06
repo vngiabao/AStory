@@ -1,0 +1,104 @@
+:root {
+    --primary-color: #f39c12; /* Màu cam chủ đạo */
+    --text-grey: #7f8c8d;
+    --bg-light: #ffffff;
+}
+
+body {
+    background-color: var(--bg-light);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.login-container {
+    max-width: 400px;
+    width: 100%;
+    margin-top: 50px;
+}
+
+.welcome-text {
+    color: var(--primary-color);
+    font-weight: 700;
+    font-size: 2rem;
+}
+
+.sub-text {
+    color: var(--text-grey);
+    font-size: 0.9rem;
+}
+
+.form-label {
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.input-group-text {
+    background: transparent;
+    border-right: none;
+    border-radius: 15px 0 0 15px;
+}
+
+.form-control {
+    border-radius: 15px;
+    padding: 12px;
+    border-left: none;
+}
+
+.form-control:focus {
+    box-shadow: none;
+    border-color: #dee2e6;
+}
+
+.btn-login {
+    background-color: var(--primary-color);
+    border: none;
+    border-radius: 15px;
+    padding: 12px;
+    font-weight: bold;
+    color: white;
+    text-transform: uppercase;
+}
+
+.btn-login:hover {
+    background-color: #e67e22;
+}
+
+.social-section {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    color: var(--text-grey);
+    margin: 20px 0;
+}
+
+.divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.divider span {
+    padding: 0 10px;
+    font-size: 0.85rem;
+}
+
+.social-icons .btn {
+    border-radius: 12px;
+    width: 100px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #eee;
+    background: #f8f9fa;
+}
+
+.forgot-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+}
