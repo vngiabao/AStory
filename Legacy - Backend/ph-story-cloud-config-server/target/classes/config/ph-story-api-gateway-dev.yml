@@ -1,0 +1,59 @@
+server: 
+  port: 9082
+# Application name
+spring:
+  application:
+    name: ph-story-api-gateway
+  # Spring cloud gateway config
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOriginPatterns:
+              - http://localhost:*
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders:
+              - Authorization
+              - Content-Type
+              - Cache-Control
+              - Last-Event-ID
+            allowCredentials: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9084
+          audiences: cds-system
+
+# Eureka config
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:9761/eureka
+    registry:
+      registry-fetch-interval-seconds: 2
+  instance:
+    # When the lease expires, the default service expiration time is 90 seconds.
+    # If the service does not heartbeat after 90 seconds, eureka server will remove the service from the list.
+    # It's changed to 6 seconds
+    lease-expiration-duration-in-seconds: 6
+    # The lease renewal interval is 30 seconds by default, which is changed to 3 seconds here
+    lease-renewal-interval-in-seconds: 3
+
+# Spring cloud gateway config
+#spring.cloud.gateway.discovery.locator.enabled=true
+#spring.cloud.gateway.discovery.locator.lower-case-service-id=true
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG

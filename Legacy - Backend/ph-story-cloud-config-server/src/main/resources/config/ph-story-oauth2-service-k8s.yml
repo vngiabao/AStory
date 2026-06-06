@@ -1,0 +1,109 @@
+server:
+  port: 9084
+
+  servlet:
+    session:
+      tracking-modes: cookie
+      cookie:
+        secure: true
+        same-site: none
+        path: /
+
+  forward-headers-strategy: framework
+  use-forward-headers: true
+
+  tomcat:
+    remoteip:
+      protocol-header: x-forwarded-proto
+      protocol-header-https-value: https
+
+# Application name
+spring:
+  application:
+    name: ph-story-oauth2-service
+  jpa:
+    show-sql: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: none
+  datasource:
+    url: jdbc:postgresql://192.168.103.11:5432/lifetelladb
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      connection-timeout: 50000 #maximum number of milliseconds that a client will wait for a connection
+      minimum-idle: 10 # minimum number of idle connections maintained by HikariCP in a connection pool
+      pool-name: m0_user_manager_oauth_conn_pool # TODO: Change POOL NAME
+      maximum-pool-size: 50 # maximum pool size
+      idle-timeout: 300000 # maximum idle time for connection
+      max-lifetime: 900000 # maximum lifetime in milliseconds of a connection in the pool after it is closed.
+      auto-commit: true # default auto-commit behavior.
+      data-source-properties:
+        cachePrepStmts: true
+        prepStmtCacheSize: 250
+        prepStmtCacheSqlLimit: 2048
+        useServerPrepStmts: true
+        useLocalSessionState: true
+        rewriteBatchedStatements: true
+        cacheResultSetMetadata: true
+        cacheServerConfiguration: true
+        elideSetAutoCommits: true
+        maintainTimeStats: false
+eureka:
+  client:
+    service-url:
+      defaultZone: http://ph-story-discovery-server:9761/eureka
+    registry-fetch-interval-seconds: 2
+  instance:
+    instance-id: ${spring.application.name}:${instanceId:${random.value}}
+    lease-expiration-duration-in-seconds: 6
+    lease-renewal-interval-in-seconds: 3
+
+#logging.level.org.springframework: ERROR
+logging:
+  level:
+    org.springframework.security: TRACE
+    org.springframework.security.oauth2: TRACE
+    org.springframework.web: DEBUG
+
+# hystrix
+management.endpoints.web.exposure.include: hystrix.stream,info,health
+hystrix.command.fallbackcmd.execution.isolation.thread.timeoutInMilliseconds: 10000
+feign.circuitbreaker.enabled: true
+
+security:
+  jwt:
+    audience: cds-system
+  login:
+    max-attempts: 5
+    lock-duration-minutes: 15
+
+app:
+  cors:
+    allowedOrigins: ["https://app.lifetella.com", "https://admin.lifetella.com"] # TODO: Change here
+  security:
+    issuer: https://auth.lifetella.com # TODO: Change here
+
+    clients:
+      m2m:
+        access-token-minutes: 45 # Đối với m2m mặc định khoảng 30 phút
+        client-id: postman-client
+        client-secret: secret
+        scopes:
+          - read
+
+      spa:
+        access-token-minutes: 15 # Đối với spa mặc định khoảng 15 phút
+        client-id: spa-client
+        redirect-uri: https://app.lifetella.com/callback # TODO: Change here
+        logout-redirect-uri: https://app.lifetella.com # TODO: Change here
+
+      mobile:
+        access-token-minutes: 15 # Đối với mobile mặc định khoảng 15 phút
+        refresh-token-days: 7 # Tuỳ mức bảo mật (Cao: 7 ngày, Bình thường: 14-30 ngày, Consumer app: 30 - 90 ngày)
+        client-id: mobile-client
+        client-secret: mobile-secret
+        redirect-uri: mobile.lifetella.com://callback # TODO: Change here
+        # Nếu dùng Universal Link (khuyến nghị production)
+        # redirect-uri: https://mobile.mycompany.com/callback

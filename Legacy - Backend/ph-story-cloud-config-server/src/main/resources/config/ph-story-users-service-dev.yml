@@ -1,0 +1,101 @@
+server:
+  port: 9104
+  error: 
+    include-message: always
+    include-binding-errors: always
+
+# Application name
+spring: 
+  application: 
+    name: ph-story-users-service
+  jpa: 
+    open-in-view: false
+    show-sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate: 
+      ddl-auto: none
+  datasource:
+    url: jdbc:postgresql://127.0.0.1:5432/astory_db
+    username: postgres
+    password: 123
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      connection-timeout: 50000 #maximum number of milliseconds that a client will wait for a connection
+      minimum-idle: 2 # minimum number of idle connections maintained by HikariCP in a connection pool
+      pool-name: users_conn_pool
+      maximum-pool-size: 4 # maximum pool size
+      idle-timeout: 300000 # maximum idle time for connection
+      max-lifetime: 900000 # maximum lifetime in milliseconds of a connection in the pool after it is closed.
+      auto-commit: true # default auto-commit behavior.
+      data-source-properties: 
+        cachePrepStmts: true
+        prepStmtCacheSize: 250
+        prepStmtCacheSqlLimit: 2048
+        useServerPrepStmts: true
+        useLocalSessionState: true
+        rewriteBatchedStatements: true
+        cacheResultSetMetadata: true
+        cacheServerConfiguration: true
+        elideSetAutoCommits: true
+        maintainTimeStats: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9084
+          audiences: cds-system
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH:true}
+          starttls:
+            enable: ${MAIL_SMTP_STARTTLS_ENABLE:true}
+eureka: 
+  client: 
+    service-url: 
+      defaultZone: http://localhost:9761/eureka
+    registry-fetch-interval-seconds: 2
+  instance: 
+    instance-id: ${spring.application.name}:${instanceId:${random.value}}
+    lease-expiration-duration-in-seconds: 6
+    lease-renewal-interval-in-seconds: 3
+
+logging.level.org.springframework: INFO
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+
+# hystrix
+management.endpoints.web.exposure.include: hystrix.stream,info,health
+hystrix.command.fallbackcmd.execution.isolation.thread.timeoutInMilliseconds: 10000
+feign.circuitbreaker.enabled: true
+
+# Security query
+app: 
+  query: 
+    max-page-size: 200
+    max-filters: 30
+    max-depth: 7
+    max-in-size: 300
+  email-verification:
+    # Local/dev mac dinh log OTP trong backend de test khi chua co SMTP.
+    send-email: ${MAIL_SEND_EMAIL:false}
+    from: ${MAIL_FROM:no-reply@lifetella.com}
+    subject: ${MAIL_VERIFICATION_SUBJECT:Your LifeTella verification code}
+    otp-ttl-minutes: 5
+    resend-cooldown-seconds: 60
+    max-failed-attempts: 5
+  password-reset:
+    send-email: ${MAIL_SEND_EMAIL:false}
+    from: ${MAIL_FROM:no-reply@lifetella.com}
+    subject: ${MAIL_PASSWORD_RESET_SUBJECT:Your LifeTella password reset code}
+    otp-ttl-minutes: 5
+    resend-cooldown-seconds: 60
+    max-failed-attempts: 5
+    reset-token-ttl-minutes: 10

@@ -1,0 +1,142 @@
+server:
+  port: 9106
+  error: 
+    include-message: always
+    include-binding-errors: always
+
+# Application name
+spring: 
+  # ============================================================
+  # application configuration
+  # ============================================================
+  application: 
+    name: ph-story-seaweedfs-service
+  jpa: 
+    show-sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate: 
+      ddl-auto: none
+    #properties: # Check N+1 queries
+    #  hibernate:
+    #    generate_statistics: true
+
+  # ============================================================
+  # datasource configuration for PostgreSQL
+  # ============================================================
+  datasource:
+    url: jdbc:postgresql://192.168.103.11:5432/lifetelladb
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      connection-timeout: 50000 #maximum number of milliseconds that a client will wait for a connection
+      minimum-idle: 2 # minimum number of idle connections maintained by HikariCP in a connection pool
+      pool-name: seaweedfs_a_story_conn_pool
+      maximum-pool-size: 4 # maximum pool size
+      idle-timeout: 300000 # maximum idle time for connection
+      max-lifetime: 900000 # maximum lifetime in milliseconds of a connection in the pool after it is closed.
+      auto-commit: true # default auto-commit behavior.
+      data-source-properties: 
+        cachePrepStmts: true
+        prepStmtCacheSize: 250
+        prepStmtCacheSqlLimit: 2048
+        useServerPrepStmts: true
+        useLocalSessionState: true
+        rewriteBatchedStatements: true
+        cacheResultSetMetadata: true
+        cacheServerConfiguration: true
+        elideSetAutoCommits: true
+        maintainTimeStats: false
+  # ============================================================
+  # security configuration for OAuth2 resource server
+  # ============================================================
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://auth.lifetella.com # TODO: Change here
+          jwk-set-uri: http://ph-story-oauth2-service.lifetella:9084/oauth2/jwks
+          audiences: cds-system
+
+  
+  # ============================================================
+  # file upload cấu hình ở đây để Spring xử lý multipart request, 
+  # nhưng giới hạn kích thước file thực tế sẽ được FileService kiểm tra dựa trên max-file-size-mb đã cấu hình ở seaweedfs.s3.max-file-size-mb.
+  # ============================================================
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 50MB
+      max-request-size: 55MB
+
+  # ============================================================
+  # Bỏ cấu hình AWS S3 tự động của awspring vì đã quản lý bean S3Client riêng trong S3Config
+  # ============================================================
+  cloud:
+    aws:
+      #credentials:
+      #  access-key: admin
+      #  secret-key: admin123
+      #region:
+      #  static: us-east-1
+      s3:
+        enabled: false   # disable auto S3 config; we manage our own S3Client bean
+
+eureka: 
+  client: 
+    service-url: 
+      defaultZone: http://ph-story-discovery-server:9761/eureka
+    registry-fetch-interval-seconds: 2
+  instance: 
+    instance-id: ${spring.application.name}:${instanceId:${random.value}}
+    lease-expiration-duration-in-seconds: 6
+    lease-renewal-interval-in-seconds: 3
+
+logging.level.org.springframework: INFO
+
+#logging:
+#  level:
+#    org.springframework.security: DEBUG
+#    org.hibernate.stat: DEBUG # Check N+1 queries
+
+# hystrix
+management.endpoints.web.exposure.include: hystrix.stream,info,health
+hystrix.command.fallbackcmd.execution.isolation.thread.timeoutInMilliseconds: 10000
+feign.circuitbreaker.enabled: true
+
+# ============================================================
+# Security query limits
+# ============================================================
+app: 
+  query: 
+    max-page-size: 200
+    max-filters: 30
+    max-depth: 7
+    max-in-size: 300
+
+# ============================================================
+# SeaweedFS S3 Configuration
+# ============================================================
+seaweedfs:
+  s3:
+    endpoint: https://s3.lifetella.com
+    access-key: ${S3_ACCESS_KEY}
+    secret-key: ${S3_SECRET_KEY}
+    region: us-east-1
+    bucket-name: ph-story-bucket
+    max-file-size-mb: 10 # Maximum file size in megabytes
+    allowed-extensions:
+      - jpg
+      - jpeg
+      - png
+      - gif
+      - webp
+      - mp4
+      - mov
+      - avi
+      - pdf
+      - doc
+      - docx
+      - xls
+      - xlsx
+

@@ -1,0 +1,30 @@
+server:
+  port: 9396
+spring:
+  application:
+    name: ph-story-cloud-config-server
+  profiles:
+    active: native
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+---
+spring:
+  config:
+    activate:
+      on-profile: native
+  cloud:
+    config:
+      failFast: true
+      server:
+        native:
+          search-locations: classpath:/config
+eureka:
+  client:
+    service-url:
+      #defaultZone: http://ph-story-discovery-server:9761/eureka
+      defaultZone: http://localhost:9761/eureka
