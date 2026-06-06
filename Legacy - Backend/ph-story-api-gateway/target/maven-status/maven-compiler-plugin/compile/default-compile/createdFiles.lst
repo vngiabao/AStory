@@ -1,0 +1,4 @@
+com\ph\core\story\configuration\SecurityConfig.class
+com\ph\core\story\PropertyLogger.class
+com\ph\core\story\PhApiGatewayApplication.class
+com\ph\core\story\controller\TestController.class

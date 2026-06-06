@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: ph-story-api-gateway
+  profiles:
+    active: "dev"
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+---
+spring:
+  config:
+    activate:
+      on-profile: "dev"
+    import: optional:configserver:http://localhost:9396
+
+---
+spring:
+  config:
+    activate:
+      on-profile: "prod"
+    import: optional:configserver:http://ph-story-cloud-config-server:9396
+
+---
+spring:
+  config:
+    activate:
+      on-profile: "k8s"
+    import: optional:configserver:http://ph-story-cloud-config-server:9396
