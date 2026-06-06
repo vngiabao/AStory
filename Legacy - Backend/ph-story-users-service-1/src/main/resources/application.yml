@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: ph-story-users-service
+  profiles:
+    active: "dev"
+
+management:
+  endpoint:
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health, metrics, prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: "k8s"
+    import: optional:configserver:http://ph-story-cloud-config-server:9396
+
+---
+spring:
+  config:
+    activate:
+      on-profile: "prod"
+    import: optional:configserver:http://ph-story-cloud-config-server:9396
+
+---
+spring:
+  config:
+    activate:
+      on-profile: "dev"
+    import: optional:configserver:http://localhost:9396
