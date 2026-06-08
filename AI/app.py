@@ -89,15 +89,6 @@ def chat():
     conversation.append({"role": "assistant", "content": reply})
     audio_b64 = make_tts(reply)
 
-    # Print cost debugging info to console
-    print()
-    chat_cost = (response.usage.prompt_tokens * 0.00000015) + (response.usage.completion_tokens * 0.0000006)
-    audio_cost = len(reply) * 0.000015
-    total_cost = chat_cost + audio_cost
-    print(f"Chat cost: ${chat_cost:.6f}, Audio cost: ${audio_cost:.6f}, Total cost: ${total_cost:.6f}")
-    print(f"Tokens used: {response.usage.total_tokens} (Prompt: {response.usage.prompt_tokens}, Completion: {response.usage.completion_tokens})")
-    print()
-
     return jsonify({"reply": reply, "audio": audio_b64})
 
 
@@ -112,14 +103,6 @@ def transcribe():
         file=(audio.filename or 'audio.webm', audio.stream, audio.content_type),
         language="en"
     )
-    
-    # Print cost debugging info to console
-    audio_length_sec = audio.content_length / (16000 * 2)  # Assuming 16kHz mono 16-bit audio
-    transcription_cost = audio_length_sec * 0.000006  # Whisper cost per second
-    
-    print()
-    print(f"Transcription cost: ${transcription_cost:.6f} for {audio_length_sec:.2f} seconds of audio") 
-    print()
 
     return jsonify({"transcript": result.text})
 
