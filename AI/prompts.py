@@ -512,3 +512,10 @@ summarizer_instructions_temp = """
     Only fix obvious encoding issues if necessary
     If information is uncertain, infer conservatively
 """
+
+speech_instructions = """
+    Speak with a gentle, patient, and thoughtful style, as an AI memoir
+    interviewer speaking with an older adult. Use a warm, calm voice, a slower
+    natural pace, clear pronunciation, and soft pauses. Sound respectful,
+    curious, and reassuring, without sounding overly cheerful or dramatic.
+"""

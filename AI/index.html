@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AStory</title>
+</head>
+<body>
+
+<div id="chat"></div>
+
+<br>
+<input id="text-input" type="text" placeholder="Type or speak…" size="60" />
+<button id="mic-btn">Record</button>
+<button id="send-btn" disabled>Send</button>
+<br>
+<span id="status"></span>
+
+<script>
+  const chat      = document.getElementById('chat');
+  const textInput = document.getElementById('text-input');
+  const micBtn    = document.getElementById('mic-btn');
+  const sendBtn   = document.getElementById('send-btn');
+  const status    = document.getElementById('status');
+
+  let recorder = null; // holds { rec, stream } while active
+
+  function addMessage(role, text) {
+    const p = document.createElement('p');
+    p.textContent = (role === 'user' ? 'You: ' : 'AI: ') + text;
+    chat.appendChild(p);
+  }
+
+  async function sendMessage() {
+    const text = textInput.value.trim();
+    if (!text) return;
+
+    addMessage('user', text);
+    textInput.value = '';
+    sendBtn.disabled = true;
+    status.textContent = 'AI is thinking…';
+
+    try {
+      const res  = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text })
+      });
+      const data = await res.json();
+
+      if (data.session_ended) {
+        setTimeout(() => {
+          addMessage('ai', data.closing_reply);
+          if (data.closing_audio) new Audio('data:audio/mp3;base64,' + data.closing_audio).play();
+        }, 1500);
+
+        setTimeout(() => {
+          const pre = document.createElement('pre');
+          pre.textContent = data.summary;
+          const section = document.createElement('div');
+          section.appendChild(document.createElement('hr'));
+          section.appendChild(Object.assign(document.createElement('strong'), { textContent: 'Story Summary' }));
+          section.appendChild(pre);
+          section.appendChild(document.createElement('hr'));
+          chat.appendChild(section);
+          chat.scrollTop = chat.scrollHeight;
+        }, 3000);
+
+        // Disable input
+        textInput.disabled = true;
+        micBtn.disabled = true;
+        sendBtn.disabled = true;
+        status.textContent = 'Session ended.';
+        return;
+      }
+      if (!data.session_ended) {
+        addMessage('ai', data.reply ?? data.error ?? '(no response)');
+        if (data.audio) new Audio('data:audio/mp3;base64,' + data.audio).play();
+      }
+    } catch {
+      addMessage('ai', '(server not connected)');
+    }
+
+    status.textContent = '';
+  }
+
+  sendBtn.addEventListener('click', sendMessage);
+  textInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
+  textInput.addEventListener('input', () => { sendBtn.disabled = !textInput.value.trim(); });
+
+  async function transcribe(blob) {
+    status.textContent = 'Transcribing…';
+    const form = new FormData();
+    form.append('audio', blob, 'recording.webm');
+
+    try {
+      const res  = await fetch('/api/transcribe', { method: 'POST', body: form });
+      const data = await res.json();
+      const text = (data.transcript ?? '').trim();
+      textInput.value = text;
+      sendBtn.disabled = !text;
+    } catch {
+      status.textContent = 'Transcription error.';
+      return;
+    }
+
+    status.textContent = '';
+  }
+
+  async function startRecording() {
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      status.textContent = 'Microphone access denied.';
+      return;
+    }
+
+    const chunks = [];
+    const rec = new MediaRecorder(stream);
+
+    rec.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+    rec.onstop = () => {
+      transcribe(new Blob(chunks, { type: rec.mimeType || 'audio/webm' }));
+    };
+
+    rec.start();
+    recorder = { rec, stream };
+    micBtn.textContent = 'Stop';
+    status.textContent = 'Recording…';
+  }
+
+  function stopRecording() {
+    if (!recorder) return;
+    const { rec, stream } = recorder;
+    recorder = null;
+
+    stream.getTracks().forEach(t => t.stop()); // kills mic indicator immediately
+    rec.stop();                                 // triggers onstop → transcribe
+
+    micBtn.textContent = 'Record';
+  }
+
+  micBtn.addEventListener('click', () => { if (recorder) stopRecording(); else startRecording(); });
+</script>
+</body>
+</html>
