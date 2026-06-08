@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<!-- Meta -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Story — Keep their story forever.</title>
+<meta name="description" content="A Story helps families preserve the voices and memories of the people they love — before it's too late to ask.">
+<link rel="icon" type="image/png" href="/favicon/favicon-96x96.png?v=20260605" sizes="96x96" />
+<link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg?v=20260605" />
+<link rel="shortcut icon" href="/favicon/favicon.ico?v=20260605" />
+<link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png?v=20260605" />
+<meta name="apple-mobile-web-app-title" content="A Story" />
+<link rel="manifest" href="/favicon/site.webmanifest?v=20260605" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Figtree:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<!-- Open Graph -->
+<meta property="og:title" content="A Story — Keep their story forever.">
+<meta property="og:description" content="A Story helps families preserve the voices and memories of the people they love — before it's too late to ask.">
+<meta property="og:image" content="/assets/og-image.jpg">
+<meta property="og:url" content="https://yourdomain.com">
+<meta property="og:type" content="website">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="A Story — Keep their story forever.">
+<meta name="twitter:description" content="A Story helps families preserve the voices and memories of the people they love — before it's too late to ask.">
+<meta name="twitter:image" content="/assets/og-image.jpg">
+<style>
+  
+:root{
+  --ink:#2B2117; --ember:#B45A2B; --gold:#C7A24E; --peach:#D9A97B; --cream:#EFE6D4;
+  --paper:#EFE6D4; --paper-2:#E6D8BF; --paper-3:#F6EFE2;
+  --ink-soft:rgba(43,33,23,0.72); --ink-dim:rgba(43,33,23,0.5);
+  --line:rgba(43,33,23,0.14); --line-soft:rgba(43,33,23,0.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--paper);color:var(--ink);font-family:'Figtree',sans-serif;font-weight:300;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;mix-blend-mode:multiply;}
+.serif{font-family:'Cormorant Garamond',serif;}
+#scroll-progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(to right,var(--gold),var(--ember));z-index:200;transition:width 0.1s linear;box-shadow:0 0 8px rgba(199,162,78,0.4);}
+
+section{position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.reveal{opacity:0;transform:translateY(26px);transition:opacity 0.9s cubic-bezier(0.16,1,0.3,1),transform 0.9s cubic-bezier(0.16,1,0.3,1);}
+.reveal.in{opacity:1;transform:none;}
+.rd1{transition-delay:0.12s;}.rd2{transition-delay:0.24s;}.rd3{transition-delay:0.38s;}.rd4{transition-delay:0.52s;}
+.eyebrow{font-family:'Figtree',sans-serif;font-size:0.7rem;font-weight:600;letter-spacing:0.22em;text-transform:uppercase;color:var(--ember);}
+.section-title{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,4vw,3rem);font-weight:300;line-height:1.18;}
+.section-title em{font-style:italic;color:var(--ember);}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:1.3rem 3rem;display:flex;align-items:center;justify-content:space-between;transition:all 0.4s;}
+nav.scrolled{background:rgba(239,230,212,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);}
+.nav-logo{display:flex;align-items:center;gap:10px;font-family:'Cormorant Garamond',serif;font-size:1.55rem;font-weight:600;color:var(--ink);cursor:pointer;text-decoration:none;}
+.nav-cta{font-family:'Figtree',sans-serif;font-size:0.76rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--ember);border:1px solid rgba(180,90,43,0.4);padding:0.5rem 1.25rem;border-radius:3px;cursor:pointer;background:none;transition:all 0.3s;text-decoration:none;}
+.nav-cta:hover{background:var(--ember);color:var(--cream);border-color:var(--ember);}
+.nav-link{font-family:'Figtree',sans-serif;font-size:0.76rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-soft);text-decoration:none;transition:color 0.3s;cursor:pointer;}
+.nav-link:hover{color:var(--ember);}
+.music-btn{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:none;color:var(--ink-soft);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s;padding:0;}
+.music-btn:hover{color:var(--ember);border-color:rgba(180,90,43,0.4);}
+.music-btn svg{width:16px;height:16px;}
+.music-btn.playing{color:var(--ember);border-color:var(--ember);background:rgba(180,90,43,0.08);}
+.music-btn.playing svg{animation:musicPulse 1.6s ease-in-out infinite;}
+@keyframes musicPulse{0%,100%{opacity:0.7;}50%{opacity:1;}}
+@media(max-width:600px){
+  nav{padding:1rem 1.25rem;}
+  .nav-link{display:none;}
+  .nav-cta{font-size:0.7rem;padding:0.4rem 0.9rem;letter-spacing:0.08em;}
+  .nav-logo{font-size:1.25rem;}
+  .nav-logo svg{width:26px;height:26px;}
+}
+
+/* HERO — Daylight */
+#hero{min-height:100vh;flex-direction:column;text-align:center;padding:0 2rem;background:radial-gradient(ellipse 70% 60% at 50% 38%,#F6EFE2,var(--paper) 70%);}
+.hero-sun{position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(199,162,78,0.22),transparent 70%);filter:blur(50px);top:6%;pointer-events:none;}
+.hero-content{position:relative;z-index:2;max-width:880px;}
+.hero-eyebrow{font-size:0.7rem;font-weight:600;letter-spacing:0.22em;text-transform:uppercase;color:var(--ember);margin-bottom:1.75rem;opacity:0;animation:fadeUp 1s 0.3s forwards;}
+.hero-headline{font-family:'Cormorant Garamond',serif;font-size:clamp(3.6rem,9vw,8.5rem);font-weight:300;line-height:0.94;letter-spacing:-0.025em;color:var(--ink);margin-bottom:1.5rem;}
+.hero-headline em{font-style:italic;color:var(--ember);}
+.hero-headline .hw{display:inline-block;opacity:0;transform:translateY(28px);filter:blur(8px);animation:wordReveal 1.1s cubic-bezier(0.16,1,0.3,1) forwards;}
+.hero-headline .hw:nth-child(1){animation-delay:0.45s;}
+.hero-headline .hw:nth-child(3){animation-delay:0.75s;}
+.hero-headline .hw:nth-child(5){animation-delay:1.05s;}
+@keyframes wordReveal{to{opacity:1;transform:none;filter:blur(0);}}
+.hero-particles{position:absolute;inset:0;pointer-events:none;z-index:1;overflow:hidden;}
+.ember-dot{position:absolute;border-radius:50%;background:var(--gold);opacity:0;animation:emberFloat linear infinite;}
+@keyframes emberFloat{0%{transform:translateY(20px) translateX(0) scale(1);opacity:0;}12%{opacity:0.5;}88%{opacity:0.3;}100%{transform:translateY(-90vh) translateX(var(--dx)) scale(0.3);opacity:0;}}
+.hero-vp{font-size:1.15rem;font-weight:300;color:var(--ink);letter-spacing:0.01em;line-height:1.55;max-width:600px;margin:0 auto 0.75rem;opacity:0;animation:fadeUp 1s 0.8s forwards;}
+.hero-vp strong{color:var(--ember);font-weight:500;}
+.hero-sub{font-size:0.9rem;font-weight:300;color:var(--ink-soft);letter-spacing:0.02em;margin:0 auto 2.5rem;max-width:480px;line-height:1.7;opacity:0;animation:fadeUp 1s 0.95s forwards;}
+.hero-cta-row{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;opacity:0;animation:fadeUp 1s 1.15s forwards;}
+.btn-primary{background:var(--ember);border:none;color:var(--cream);font-family:'Figtree',sans-serif;font-size:0.82rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:0.95rem 2.1rem;border-radius:3px;cursor:pointer;transition:all 0.3s;box-shadow:0 8px 26px rgba(180,90,43,0.22);}
+.btn-primary:hover{background:#a14e22;transform:translateY(-1px);}
+.btn-ghost{background:none;border:1px solid var(--line);color:var(--ink-soft);font-family:'Figtree',sans-serif;font-size:0.82rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;padding:0.95rem 2.1rem;border-radius:3px;cursor:pointer;transition:all 0.3s;}
+.btn-ghost:hover{border-color:var(--ink);color:var(--ink);}
+.trust-strip{display:flex;gap:1.75rem;justify-content:center;flex-wrap:wrap;margin-top:2.5rem;opacity:0;animation:fadeUp 1s 1.35s forwards;}
+.trust-item{font-size:0.68rem;letter-spacing:0.04em;color:var(--ink-dim);display:flex;align-items:center;gap:0.35rem;white-space:nowrap;}
+.trust-item span{color:var(--ember);}
+.scroll-hint{position:absolute;bottom:2.2rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:0.5rem;color:var(--ink-dim);font-size:0.65rem;letter-spacing:0.16em;text-transform:uppercase;animation:fadeIn 1s 2.2s both;}
+.scroll-line{width:1px;height:42px;background:linear-gradient(to bottom,rgba(180,90,43,0.5),transparent);animation:scrollPulse 2.2s ease-in-out infinite;}
+/* FOCUS - For Tab keyboard */
+:focus-visible {outline: 2px solid var(--ember); outline-offset: 3px;}
+.nav-logo:focus-visible,
+.nav-link:focus-visible {outline: 2px solid var(--ember); outline-offset: 4px; border-radius: 2px; }
+.music-btn:focus-visible {outline: 2px solid var(--ember); outline-offset: 3px; border-color: var(--ember); }
+.btn-primary:focus-visible,
+.btn-ghost:focus-visible,
+.nav-cta:focus-visible,
+.waitlist-btn:focus-visible,
+.cta-btn:focus-visible {outline: 2px solid var(--ember); outline-offset: 3px;}
+.waitlist-input:focus-visible {outline: 2px solid var(--ember); outline-offset: 0; border-color: var(--ember);}
+/*addtional focus*/
+#our-story-page button:focus-visible {outline: 2px solid var(--ember); outline-offset: 3px;}
+
+@keyframes scrollPulse{0%,100%{opacity:0.3;transform:scaleY(1);}50%{opacity:1;transform:scaleY(1.25);}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:none;}}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+@media (prefers-reduced-motion: reduce) {
+  html {scroll-behavior: auto;}
+  .ember-dot {animation: none; opacity: 0;}
+  .hero-headline .hw {opacity: 1; transform: none; filter: none; animation: none;}
+  .hero-eyebrow, .hero-vp, .hero-sub, .hero-cta-row, .trust-strip, .scroll-hint {opacity: 1; transform: none; animation: none;}
+  .reveal {opacity: 1; transform: none; transition: none;}
+  #scroll-progress, nav, .btn-primary, .btn-ghost, .nav-cta, .legacy-card, .safety-card, .gift-card {transition: none;}
+  .scroll-line, .music-btn.playing svg {animation: none;}
+}
+/* HOOK — Firelight */
+#hook{min-height:auto;padding:8.5rem 2rem;flex-direction:column;text-align:center;background:#231a12;color:var(--cream);}
+.hook-headline{font-family:'Cormorant Garamond',serif;font-size:clamp(2.6rem,6.5vw,5.6rem);font-weight:300;line-height:1.02;letter-spacing:-0.02em;color:var(--cream);max-width:820px;margin-bottom:2rem;}
+.hook-headline em{font-style:italic;color:var(--gold);}
+.hook-body{font-size:1rem;font-weight:300;color:rgba(239,230,212,0.65);max-width:560px;line-height:1.85;margin-bottom:2.5rem;}
+.counter-row{display:flex;gap:4rem;flex-wrap:nowrap;justify-content:center;align-items:flex-start;}
+.counter-num{font-family:'Figtree',serif;font-style:italic;font-size:clamp(3rem,7vw,5rem);font-weight:300;color:var(--gold);line-height:1;letter-spacing:-0.02em;}
+.counter-label{font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;color:rgba(239,230,212,0.55);margin-top:0.6rem;line-height:1.6;}.counter-item{display:flex;flex-direction:column;align-items:center;text-align:center;}
+
+/* DEMO — Firelight */
+#demo{min-height:auto;padding:8rem 2rem;flex-direction:column;text-align:center;background:linear-gradient(180deg,#231a12 0%,#1c130b 55%,#231a12 100%);color:var(--cream);}
+#demo .eyebrow{color:var(--gold);}
+#demo .section-title{color:var(--cream);}
+#demo .section-title em{color:var(--gold);}
+.demo-stage-wrap{position:relative;display:flex;justify-content:center;align-items:center;width:100%;margin-top:3rem;}
+.demo-glow{position:absolute;width:420px;height:420px;border-radius:50%;background:var(--ember);filter:blur(120px);opacity:0.16;pointer-events:none;}
+.phone{position:relative;width:330px;height:660px;border-radius:42px;background:#120c06;border:2px solid rgba(199,162,78,0.22);box-shadow:0 40px 100px rgba(0,0,0,0.55);overflow:hidden;z-index:1;display:flex;flex-direction:column;}
+.phone-statusbar{height:30px;display:flex;align-items:center;justify-content:space-between;padding:0.5rem 1.4rem 0;font-size:0.62rem;color:rgba(239,230,212,0.4);flex-shrink:0;}
+.phone-appbar{padding:0.5rem 1.25rem 0.9rem;border-bottom:1px solid rgba(199,162,78,0.1);display:flex;align-items:center;gap:0.7rem;flex-shrink:0;}
+.app-elder-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--peach),var(--ember));display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:0.95rem;color:var(--ink);font-weight:600;flex-shrink:0;}
+.app-elder-name{font-size:0.82rem;font-weight:400;color:var(--cream);text-align:left;line-height:1.2;}
+.app-elder-status{font-size:0.62rem;color:var(--gold);letter-spacing:0.04em;text-align:left;}
+.app-logo-mini{margin-left:auto;display:flex;align-items:center;gap:5px;font-family:'Cormorant Garamond',serif;font-size:0.85rem;color:rgba(239,230,212,0.4);}
+.phone-chat{flex:1;overflow-y:auto;overflow-x:hidden;padding:1.1rem 1rem 1rem;display:flex;flex-direction:column;gap:0.7rem;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;}
+.phone-chat::-webkit-scrollbar{width:0;}
+.msg{max-width:80%;font-size:0.8rem;line-height:1.5;opacity:0;transform:translateY(8px);transition:opacity 0.5s,transform 0.5s;}
+.msg.show{opacity:1;transform:none;}
+.msg-ai{align-self:flex-start;background:rgba(199,162,78,0.08);border:1px solid rgba(199,162,78,0.15);border-radius:4px 14px 14px 14px;padding:0.6rem 0.85rem;color:var(--cream);font-weight:300;}
+.msg-elder{align-self:flex-end;background:rgba(180,90,43,0.16);border:1px solid rgba(180,90,43,0.3);border-radius:14px 4px 14px 14px;padding:0.6rem 0.85rem;color:var(--peach);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.86rem;}
+.speaking-row{align-self:flex-start;display:flex;align-items:center;gap:5px;padding:0 0.2rem;opacity:0;transition:opacity 0.3s;height:0;overflow:hidden;}
+.speaking-row.show{opacity:1;height:34px;}
+.sbar{width:3px;border-radius:2px;background:var(--gold);height:20px;transform:scaleY(0.3);transform-origin:center;animation:spk 0.6s ease-in-out infinite alternate;}
+@keyframes spk{from{transform:scaleY(0.25);opacity:0.45;}to{transform:scaleY(1);opacity:1;}}
+.listening-row{align-self:flex-end;display:flex;align-items:center;gap:5px;padding:0.3rem 0.5rem;opacity:0;transition:opacity 0.3s;height:0;overflow:hidden;}
+.listening-row.show{opacity:1;height:auto;}
+.listening-row .dot{width:5px;height:5px;border-radius:50%;background:var(--ember);animation:ld 1.2s ease-in-out infinite;}
+.listening-row .dot:nth-child(3){animation-delay:0.2s;}
+.listening-row .dot:nth-child(4){animation-delay:0.4s;}
+.listening-label{font-size:0.6rem;color:rgba(217,169,123,0.6);letter-spacing:0.06em;}
+@keyframes ld{0%,100%{opacity:0.3;transform:translateY(0);}50%{opacity:1;transform:translateY(-3px);}}
+.app-memory-card{align-self:center;width:92%;background:rgba(43,33,23,0.96);border:1px solid rgba(199,162,78,0.35);border-radius:12px;padding:0.85rem 1rem;margin-top:0.3rem;opacity:0;transform:translateY(14px) scale(0.96);transition:opacity 0.7s,transform 0.7s;}
+.app-memory-card.show{opacity:1;transform:none;}
+.amc-chip{font-size:0.56rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold);margin-bottom:0.4rem;display:flex;align-items:center;gap:0.35rem;}
+.amc-chip .d{width:4px;height:4px;border-radius:50%;background:var(--gold);}
+.amc-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.86rem;color:var(--cream);line-height:1.45;margin-bottom:0.4rem;}
+.amc-saved{font-size:0.6rem;color:var(--peach);letter-spacing:0.05em;}
+.phone-footer{flex-shrink:0;padding:0.8rem 1rem 1.2rem;border-top:1px solid rgba(199,162,78,0.1);}
+.app-mic-btn{width:100%;background:var(--ember);border:none;color:var(--cream);font-family:'Figtree',sans-serif;font-size:0.74rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:0.8rem;border-radius:24px;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:0.5rem;}
+.app-mic-btn:hover{background:#a14e22;}
+.app-mic-btn:disabled{opacity:0.5;cursor:default;}
+.demo-replay{margin-top:1.75rem;background:none;border:1px solid rgba(199,162,78,0.3);color:var(--gold);font-family:'Figtree',sans-serif;font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.6rem 1.4rem;border-radius:3px;cursor:pointer;transition:all 0.3s;opacity:0;}
+.demo-replay.show{opacity:1;}
+.demo-replay:hover{background:rgba(199,162,78,0.1);}
+
+/* HOW — Daylight */
+#how{min-height:auto;padding:8rem 2rem;flex-direction:column;text-align:center;background:var(--paper);}
+.steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2.5rem;max-width:880px;width:100%;margin-top:3.5rem;position:relative;}
+.steps-grid::before{content:'';position:absolute;top:2.2rem;left:calc(16.6% + 2px);right:calc(16.6% + 2px);height:1px;background:linear-gradient(to right,rgba(180,90,43,0.3),rgba(180,90,43,0.15),rgba(180,90,43,0.3));}
+.step{display:flex;flex-direction:column;align-items:center;gap:1rem;text-align:center;}
+.step-num{width:44px;height:44px;border:1px solid rgba(180,90,43,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--ember);background:var(--paper);position:relative;z-index:1;}
+.step h3{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:500;color:var(--ink);}
+.step p{font-size:0.84rem;font-weight:300;color:var(--ink-soft);line-height:1.75;}
+
+/* PHOTOS — Daylight */
+#photos{min-height:auto;padding:8rem 2rem;flex-direction:column;background:var(--paper-3);}
+.split-inner{max-width:960px;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:center;}
+.split-text h2{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,3.5vw,3.2rem);font-weight:300;color:var(--ink);line-height:1.2;margin-bottom:1.5rem;margin-top:1rem;}
+.split-text h2 em{font-style:italic;color:var(--ember);}
+.split-text p{font-size:0.93rem;font-weight:300;color:var(--ink-soft);line-height:1.8;margin-bottom:1rem;}
+.photo-stack{position:relative;width:280px;height:330px;margin:0 auto;}
+.photo-card{position:absolute;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#fff;box-shadow:0 14px 40px rgba(43,33,23,0.12);}
+.photo-img{width:100%;display:block;}
+.photo-caption{padding:0.6rem 0.75rem;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.76rem;color:var(--ink-soft);line-height:1.4;border-top:1px solid var(--line-soft);background:var(--paper-3);}
+.photo-tag{position:absolute;background:#231a12;border:1px solid rgba(199,162,78,0.4);border-radius:6px;padding:0.45rem 0.65rem;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.72rem;color:var(--gold);white-space:nowrap;box-shadow:0 4px 16px rgba(43,33,23,0.25);}
+
+/* LEGACY — Daylight */
+#legacy{min-height:auto;padding:8.5rem 2rem;flex-direction:column;background:var(--paper);}
+.legacy-cards{display:flex;flex-direction:column;gap:1rem;}
+.legacy-card{background:var(--paper-3);border:1px solid var(--line);border-radius:12px;padding:1.4rem 1.5rem;display:flex;gap:1.1rem;align-items:center;transition:border-color 0.3s,transform 0.3s;}
+.legacy-card:hover{border-color:rgba(180,90,43,0.35);transform:translateX(2px);}
+.legacy-icon{width:42px;height:42px;flex-shrink:0;border-radius:10px;background:var(--paper);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;}
+.legacy-icon svg{width:22px;height:22px;}
+.legacy-card h4{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:500;color:var(--ink);margin-bottom:0.3rem;}
+.legacy-card p{font-size:0.82rem;font-weight:300;color:var(--ink-soft);line-height:1.7;}
+.legacy-whisper{max-width:760px;margin:3rem auto 0;text-align:center;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.1rem;color:var(--ember);opacity:0.85;}
+
+/* SAFETY — Daylight */
+#safety{min-height:auto;padding:8.5rem 2rem;flex-direction:column;background:var(--paper);}
+.safety-inner{max-width:920px;width:100%;display:flex;flex-direction:column;align-items:center;}
+.safety-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;width:100%;margin-top:3rem;}
+.safety-card{background:var(--paper-3);border:1px solid var(--line);border-radius:12px;padding:1.75rem 1.5rem;text-align:center;transition:border-color 0.3s,transform 0.3s;}
+.safety-card:hover{border-color:rgba(180,90,43,0.35);transform:translateY(-3px);}
+.safety-ic{width:48px;height:48px;margin:0 auto 1rem;border-radius:12px;background:var(--paper);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;}
+.safety-ic svg{width:24px;height:24px;}
+.safety-card h4{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:500;color:var(--ink);text-transform:none;letter-spacing:0;margin-bottom:0.5rem;}
+.safety-card p{font-size:0.85rem;color:var(--ink-soft);line-height:1.7;margin:0;}
+.safety-pledge{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(1.3rem,2.5vw,1.8rem);color:var(--ember);text-align:center;margin-top:3rem;max-width:600px;line-height:1.4;}
+
+/* GIFT — Daylight */
+#gift{min-height:auto;padding:8.5rem 2rem;flex-direction:column;background:var(--paper-3);}
+.gift-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;width:100%;max-width:680px;}
+.gift-card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:1.6rem 1.4rem;text-align:center;transition:border-color 0.3s,transform 0.3s;}
+.gift-card:hover{border-color:rgba(180,90,43,0.35);transform:translateY(-3px);}
+.gift-occasion{font-family:'Cormorant Garamond',serif;font-size:1.3rem;color:var(--ink);margin-bottom:0.6rem;}
+.gift-card p{font-size:0.85rem;color:var(--ink-soft);line-height:1.65;margin:0;}
+
+/* TIMELINE — Daylight */
+#timeline{min-height:auto;padding:8rem 0;flex-direction:column;overflow:hidden;background:var(--paper-3);position: relative;}
+.timeline-heading{text-align:center;margin-bottom:4rem;padding:0 2rem;}
+.timeline-scroll-wrapper{width:100%;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;padding:0 3rem 2rem;-webkit-overflow-scrolling: touch;scroll-behavior: smooth;}
+.timeline-scroll-wrapper::-webkit-scrollbar{display:none;}
+.timeline-track{display:flex;align-items:flex-start;position:relative;min-width:max-content;padding-top:2.5rem;}
+.timeline-track::before{content:'';position:absolute;top:5.4rem;left:80px;right:80px;height:1px;background:linear-gradient(to right,transparent,rgba(180,90,43,0.4) 8%,rgba(180,90,43,0.35) 92%,transparent);}
+.tl-event{display:flex;flex-direction:column;align-items:center;width:168px;flex-shrink:0;position:relative;}
+.tl-card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:0.65rem 0.8rem;width:148px;margin-bottom:0.5rem;box-shadow:0 8px 24px rgba(43,33,23,0.08);}
+.tl-card-year{font-size:0.56rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--ember);margin-bottom:0.25rem;}
+.tl-card-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.78rem;color:var(--ink);line-height:1.45;}
+.tl-dot-row{display:flex;flex-direction:column;align-items:center;position:relative;z-index:1;}
+.tl-dot{width:10px;height:10px;border-radius:50%;background:var(--ember);border:2px solid var(--paper-3);box-shadow:0 0 0 1px rgba(180,90,43,0.45);flex-shrink:0;}
+.tl-stem{width:1px;height:22px;background:rgba(180,90,43,0.28);}
+.tl-year{font-size:0.62rem;color:var(--ink-dim);letter-spacing:0.08em;margin-top:0.3rem;}
+.tl-event.below .tl-card{order:3;margin-bottom:0;margin-top:0.5rem;}
+.tl-event.below .tl-dot-row{order:2;}.tl-event.below .tl-year{order:4;}.tl-event.below{padding-top:6rem;}
+.tl-event.above .tl-card{order:1;}.tl-event.above .tl-dot-row{order:2;}.tl-event.above .tl-year{order:3;}
+.timeline-scroll-hint {
+  position: absolute;
+  right: 2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Figtree', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ember);
+  opacity: 0.7;
+  pointer-events: none;
+  animation: nudgeRight 1.8s ease-in-out infinite;
+}
+
+@keyframes nudgeRight {
+  0%, 100% { transform: translateY(-50%) translateX(0); }
+  50%       { transform: translateY(-50%) translateX(5px); }
+}
+@media(prefers-reduced-motion: reduce) {
+  .timeline-scroll-hint { animation: none; }
+}
+
+
+/* TESTIMONIAL — Daylight */
+#testimonial{min-height:auto;padding:8.5rem 2rem;flex-direction:column;text-align:center;background:var(--paper);}
+.testimonial-quote{font-family:'Cormorant Garamond',serif;font-size:clamp(1.7rem,3.5vw,2.7rem);font-weight:300;font-style:italic;line-height:1.4;color:var(--ink);max-width:700px;margin-bottom:2.5rem;position:relative;}
+.testimonial-quote::before{content:'\201C';position:absolute;top:-1.5rem;left:-0.5rem;font-size:5rem;color:var(--ember);opacity:0.2;line-height:1;}
+.testimonial-attr{font-size:0.78rem;font-weight:500;color:var(--ember);letter-spacing:0.1em;text-transform:uppercase;}
+.testimonial-disclaimer{font-size:0.68rem;color:var(--ink-dim);margin-top:0.75rem;font-style:italic;}
+
+/* WAITLIST — Daylight, golden */
+#waitlist{min-height:100vh;flex-direction:column;text-align:center;padding:8rem 2rem;background:radial-gradient(ellipse 75% 55% at 50% 50%,#F6EFE2,var(--paper) 70%);}
+.waitlist-glow{position:absolute;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(199,162,78,0.25),transparent 70%);filter:blur(60px);pointer-events:none;}
+.waitlist-title{font-family:'Cormorant Garamond',serif;font-size:clamp(2.8rem,7vw,6rem);font-weight:300;line-height:1.05;color:var(--ink);margin-bottom:1.5rem;position:relative;z-index:1;}
+.waitlist-title em{font-style:italic;color:var(--ember);}
+.waitlist-sub{font-size:0.93rem;font-weight:300;color:var(--ink-soft);max-width:440px;line-height:1.85;margin-bottom:2.5rem;position:relative;z-index:1;}
+.app-badges{display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;margin-bottom:2.5rem;position:relative;z-index:1;}
+.app-badge{display:flex;align-items:center;gap:0.6rem;background:var(--paper-3);border:1px solid var(--line);border-radius:8px;padding:0.55rem 1.1rem;}
+.app-badge-icon{width:24px;height:24px;display:flex;align-items:center;justify-content:center;}
+.app-badge-icon svg{width:24px;height:24px;}
+.app-badge-soon{font-size:0.56rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--ember);display:block;line-height:1;}
+.app-badge-name{font-size:0.82rem;font-weight:500;color:var(--ink);display:block;line-height:1.3;}
+.app-badge-text{text-align:left;}
+.waitlist-form{display:flex;flex-wrap:wrap;gap:10px;max-width:440px;width:100%;position:relative;z-index:1;}
+.waitlist-input{background:#fff;border:1px solid var(--line);border-radius:4px;padding:0 1.25rem;height:52px;color:var(--ink);font-family:'Figtree',sans-serif;font-size:0.9rem;font-weight:300;outline:none;transition:border-color 0.3s;min-width:0;flex:1;}
+.waitlist-input::placeholder{color:var(--ink-dim);}
+.waitlist-input:focus{border-color:var(--ember);}
+#wl-phone{flex:0 0 100%;}
+.waitlist-btn{flex:0 0 100%;background:var(--ember);border:none;color:var(--cream);font-family:'Figtree',sans-serif;font-size:0.78rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;padding:0 1.75rem;height:52px;border-radius:4px;cursor:pointer;white-space:nowrap;transition:background 0.3s;}
+.waitlist-btn:hover{background:#a14e22;}
+.waitlist-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.waitlist-note{font-size:0.7rem;color:var(--ink-dim);margin-top:1rem;letter-spacing:0.02em;position:relative;z-index:1;}
+.success-msg{display:none;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.5rem;color:var(--ember);opacity:0;transition:opacity 0.8s;position:relative;z-index:1;}
+.waitlist-tagline{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1rem;color:var(--ember);opacity:0.75;margin-top:3.5rem;letter-spacing:0.04em;position:relative;z-index:1;}
+.urgency-badge{display:inline-flex;align-items:center;gap:0.5rem;font-family:'Figtree',sans-serif;font-size:0.68rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--ember);background:rgba(180,90,43,0.08);border:1px solid rgba(180,90,43,0.25);padding:0.45rem 1rem;border-radius:30px;margin-bottom:1.75rem;position:relative;z-index:1;}
+.pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--ember);position:relative;}
+.pulse-dot::after{content:'';position:absolute;inset:0;border-radius:50%;background:var(--ember);animation:pulse 2s ease-out infinite;}
+@keyframes pulse{0%{transform:scale(1);opacity:0.7;}100%{transform:scale(3);opacity:0;}}
+
+/* OUR STORY SECTION — Firelight hero + Daylight article */
+#our-story{scroll-margin-top:0;}
+.story-hero{min-height:64vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:9rem 2rem 5rem;background:#231a12;color:var(--cream);position:relative;overflow:hidden;}
+.story-hero .sglow{position:absolute;width:560px;height:560px;border-radius:50%;background:radial-gradient(circle,rgba(199,162,78,0.22),transparent 70%);filter:blur(50px);top:10%;pointer-events:none;}
+.story-eyebrow{position:relative;z-index:1;font-size:0.7rem;font-weight:600;letter-spacing:0.24em;text-transform:uppercase;color:var(--gold);margin-bottom:1.5rem;}
+.story-title{position:relative;z-index:1;font-family:'Cormorant Garamond',serif;font-weight:300;font-size:clamp(2.4rem,5.5vw,4.4rem);line-height:1.08;color:var(--cream);max-width:780px;margin-bottom:1.5rem;}
+.story-title em{font-style:italic;color:var(--gold);}
+.story-hero-sub{position:relative;z-index:1;font-size:1rem;color:rgba(239,230,212,0.6);max-width:440px;line-height:1.8;}
+.story-article{max-width:680px;margin:0 auto;padding:5rem 2rem 3rem;}
+.story-article p{font-size:1.1rem;line-height:1.9;color:var(--ink);margin-bottom:1.6rem;}
+.story-article p.lead{font-family:'Cormorant Garamond',serif;font-size:1.55rem;line-height:1.5;color:var(--ink);font-style:italic;margin-bottom:2rem;}
+.story-article .pull{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.85rem;line-height:1.4;color:var(--ember);text-align:center;margin:2.5rem 0;padding:1.5rem 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+.story-article strong{font-weight:500;color:var(--ink);}
+.story-signature{margin-top:3rem;padding-top:2rem;border-top:1px solid var(--line);display:flex;align-items:center;gap:1rem;}
+.sig-pic{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--peach),var(--ember));display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:#fff;flex-shrink:0;}
+.sig-name{font-family:'Cormorant Garamond',serif;font-size:1.2rem;color:var(--ink);}
+.sig-role{font-size:0.8rem;color:var(--ink-dim);letter-spacing:0.04em;}
+.sig-link{display:inline-block;margin-top:0.5rem;font-size:0.82rem;font-weight:500;color:var(--ember);text-decoration:none;letter-spacing:0.02em;transition:color 0.3s;}
+.sig-link:hover{color:#a14e22;text-decoration:underline;}
+.story-cta{text-align:center;padding:5rem 2rem 6rem;background:radial-gradient(ellipse 70% 60% at 50% 50%,#F6EFE2,var(--paper) 70%);}
+.story-cta h2{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:clamp(2rem,4vw,3rem);color:var(--ink);margin-bottom:1rem;}
+.story-cta h2 em{font-style:italic;color:var(--ember);}
+.story-cta p{color:var(--ink-soft);max-width:420px;margin:0 auto 2rem;line-height:1.7;}
+.cta-btn{display:inline-block;background:var(--ember);color:var(--cream);font-family:'Figtree',sans-serif;font-size:0.82rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:0.95rem 2.2rem;border-radius:3px;text-decoration:none;transition:all 0.3s;box-shadow:0 8px 26px rgba(180,90,43,0.22);cursor:pointer;border:none;}
+.cta-btn:hover{background:#a14e22;transform:translateY(-1px);}
+
+footer{padding:2.5rem 3rem;display:flex;justify-content:space-between;align-items:center;font-size:0.73rem;color:var(--ink-dim);letter-spacing:0.04em;background:#231a12;}
+footer .f-logo{display:flex;align-items:center;gap:8px;font-family:'Cormorant Garamond',serif;font-size:1rem;color:var(--cream);}
+footer a{color:var(--gold);text-decoration:none;}
+footer .f-meta{color:rgba(239,230,212,0.4);}
+
+@media(max-width:820px){
+  .split-inner{grid-template-columns:1fr;gap:3rem;}
+  .photo-stack{order:-1;}
+  .steps-grid{grid-template-columns:1fr;gap:2.25rem;}
+  .steps-grid::before{display:none;}
+}
+@media(max-width:600px){
+  nav{padding:0.95rem 1.25rem;}
+  .nav-logo{font-size:1.2rem;}
+  .nav-cta{font-size:0.66rem;padding:0.45rem 0.9rem;letter-spacing:0.08em;}
+  section{padding-left:0;padding-right:0;}
+  #hero{padding:5.5rem 1.5rem 2rem;justify-content:center;min-height:100svh;}
+  .hero-eyebrow{font-size:0.6rem;letter-spacing:0.14em;margin-bottom:1.25rem;width:100%;line-height:1.5;text-align:center;}
+  #hook,#demo,#how,#photos,#legacy,#testimonial,#waitlist{padding:5rem 1.5rem;}
+  .hero-headline{font-size:3.6rem;line-height:0.96;margin-bottom:1.25rem;}
+  .hero-vp{font-size:1.05rem;line-height:1.6;}
+  .hero-cta-row{flex-direction:column;width:100%;max-width:300px;margin:0 auto;}
+  .hero-cta-row button{width:100%;}
+  .trust-strip{gap:1.2rem;flex-direction:row;align-items:center;justify-content:center;flex-wrap:nowrap;}
+  .hook-headline{font-size:2.6rem;line-height:1.08;}
+  .hook-body{font-size:0.95rem;line-height:1.8;}
+  .section-title{font-size:2rem;}
+  .waitlist-title{font-size:2.8rem;line-height:1.08;}
+  .testimonial-quote{font-size:1.5rem;line-height:1.45;}
+  .counter-row{gap:2rem 1.5rem;flex-wrap:wrap;flex-direction:row;}
+  .counter-item{width:calc(50% - 0.75rem);}
+  .counter-num{font-size:3rem;}
+  .phone{width:min(330px,86vw);height:auto;min-height:560px;}
+  .legacy-card{padding:1.2rem 1.2rem;}
+  .photo-stack{height:300px;transform:scale(0.92);}
+  .waitlist-form{flex-direction:column;gap:0.6rem;}
+  .waitlist-input{border-right:1px solid var(--line);border-radius:6px;height:56px;text-align:left;font-size:1rem;padding:0 1.25rem;}
+  .waitlist-btn{border-radius:6px;height:56px;width:100%;padding:0;}
+  .app-badges{gap:0.6rem;}
+  footer{flex-direction:column;gap:0.75rem;text-align:center;padding:2.5rem 1.5rem;}
+  .scroll-hint{display:none;}
+  #safety{padding:5rem 1.5rem;}
+  .safety-grid{grid-template-columns:1fr;gap:0.9rem;}
+  #gift{padding:5rem 1.5rem;}
+  .gift-grid{grid-template-columns:1fr;gap:0.9rem;}
+  .story-hero{padding:8rem 1.5rem 4rem;}
+  .story-article{padding:3.5rem 1.5rem 2.5rem;}
+  .story-article p{font-size:1.02rem;}
+  .story-article p.lead{font-size:1.3rem;}
+  .story-article .pull{font-size:1.45rem;}
+  .story-cta{padding:4rem 1.5rem 5rem;}
+}
+
+</style>
+</head>
+<body>
+<div id="scroll-progress"></div>
+<audio id="bg-music" loop preload="auto">
+  <source src="assets/music.mp3" type="audio/mpeg">
+</audio>
+
+<nav id="main-nav">
+  <a class="nav-logo" tabindex="0" onclick="window.scrollTo({top:0,behavior: prefersReduced ? 'auto' : 'smooth'})">
+    <svg aria-hidden="true" width="34" height="34" viewBox="0 0 64 64"><path d="M32 9 C24 23 16 41 11 55 L18 55 C27 41 30 25 32 13 Z" fill="#2B2117"/><path d="M32 9 C40 23 48 41 53 55 L46 55 C37 41 34 25 32 13 Z" fill="#2B2117"/><g transform="translate(23.33,29.33) scale(0.542)" fill="#B45A2B"><path d="M16 29 C16 29 4 20 4 11 C4 6 8 3 12 3 C14 3 16 5 16 6 C16 5 18 3 20 3 C24 3 28 6 28 11 C28 20 16 29 16 29 Z"/></g></svg>
+    Story
+  </a>
+  <div style="display:flex;align-items:center;gap:1rem;">
+    <button id="music-toggle" class="music-btn" onclick="toggleMusic()" aria-label="Toggle music" title="Unmute music">
+      <svg id="icon-sound-on" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg>
+      <svg id="icon-sound-off" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/><line x1="3" y1="3" x2="21" y2="21" stroke="currentColor" stroke-width="1.6"/></svg>
+    </button>
+    <a class="nav-link" tabindex="0" onclick="openOurStory()">Our Story</a>
+    <button class="nav-cta" onclick="document.getElementById('waitlist').scrollIntoView({behavior: prefersReduced ? 'auto' : 'smooth'})">Join Waitlist</button>
+  </div>
+</nav>
+
+<!-- HERO (Daylight) -->
+<section id="hero">
+  <div class="hero-sun"></div>
+  <div class="hero-particles" id="hero-particles"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">A Story · coming soon to iPhone &amp; Android</p>
+    <h1 class="hero-headline"><span class="hw">Talk.</span><br><span class="hw"><em>Listen.</em></span><br><span class="hw">Remembered.</span></h1>
+    <p class="hero-vp">A warm AI that <strong>gently interviews the people you love</strong> — and turns a lifetime of memories into a story your family keeps forever.</p>
+    <p class="hero-sub">The most meaningful gift you can give a parent or grandparent: someone, finally, to ask. Captured in their own voice, while there's still time.</p>
+    <div class="hero-cta-row">
+      <button class="btn-primary" onclick="unlockContent(); setTimeout(()=> document.getElementById('waitlist').scrollIntoView({behavior: prefersReduced ? 'auto' : 'smooth'}), 100)">Join the waitlist</button>
+      <button class="btn-ghost" id="hear-btn" onclick="unlockContent()">Hear it in action</button>
+    </div>
+    <div class="trust-strip">
+      <div class="trust-item"><span>✦</span> Private &amp; secure</div>
+      <div class="trust-item"><span>✦</span> Made for families</div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTENT GATE: hidden until "Hear it in action" clicked -->
+<div id="content-gate" style="display:none;">
+
+
+<!-- HOOK (Firelight) -->
+<section id="hook">
+  <h2 class="hook-headline reveal">Every life holds a story<br><em>worth keeping.</em><br>Most are never told.</h2>
+  <p class="hook-body reveal rd1">The people we love carry whole worlds inside them — the smell of a childhood kitchen, the day everything changed, how the family found its way here. These stories live in one place only. And we almost always mean to ask… later.</p>
+  <div class="counter-row reveal rd2">
+    <div class="counter-item"><div class="counter-num" id="cnt1">0</div><div class="counter-label">stories lost<br>every single day</div></div>
+    <div class="counter-item"><div class="counter-num" id="cnt2">0</div><div class="counter-label">adults have never<br>recorded a parent</div></div>
+    <div class="counter-item"><div class="counter-num" id="cnt3">0</div><div class="counter-label">questions left<br>forever unasked</div></div>
+  </div>
+</section>
+
+<!-- DEMO (Firelight) -->
+<section id="demo">
+  <p class="eyebrow reveal">Watch a memory come back</p>
+  <h2 class="section-title reveal rd1" style="margin-top:1rem;margin-bottom:0.75rem;text-align:center;">"I'm not sure where<br>to start…"</h2>
+  <p class="reveal rd2" style="text-align:center;margin:0 auto 1rem;max-width:500px;color:rgba(239,230,212,0.6);font-size:0.93rem;line-height:1.7;">Most people freeze at first. Watch how A Story gently finds the thread — and turns "I don't know" into the story of how Grandma met Grandpa. Tap play, sound on.</p>
+  <div class="demo-stage-wrap reveal rd3">
+    <div class="demo-glow"></div>
+    <div class="phone">
+      <div class="phone-statusbar"><span>9:41</span><span>A Story</span></div>
+      <div class="phone-appbar">
+        <div class="app-elder-avatar">M</div>
+        <div><div class="app-elder-name">Margaret · Grandma</div><div class="app-elder-status" id="app-status">Ready when you are</div></div>
+        <div class="app-logo-mini">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 64 64"><path d="M32 9 C24 23 16 41 11 55 L18 55 C27 41 30 25 32 13 Z" fill="#EFE6D4"/><path d="M32 9 C40 23 48 41 53 55 L46 55 C37 41 34 25 32 13 Z" fill="#EFE6D4"/><g transform="translate(23.33,29.33) scale(0.542)" fill="#C7A24E"><path d="M16 29 C16 29 4 20 4 11 C4 6 8 3 12 3 C14 3 16 5 16 6 C16 5 18 3 20 3 C24 3 28 6 28 11 C28 20 16 29 16 29 Z"/></g></svg>
+          Story
+        </div>
+      </div>
+      <div class="phone-chat" id="phone-chat"></div>
+      <div class="phone-footer">
+        <button class="app-mic-btn" id="mic-btn" onclick="startDemo()"><span style="font-size:0.95rem;">◉</span> <span id="mic-label">Tap to play the demo</span></button>
+      </div>
+    </div>
+  </div>
+  <button class="demo-replay" id="demo-replay" onclick="resetDemo()">↺ Play again</button>
+</section>
+
+<!-- HOW (Daylight) -->
+<section id="how">
+  <div style="display:flex;flex-direction:column;align-items:center;text-align:center;width:100%;max-width:900px;">
+    <p class="eyebrow reveal">How it works</p>
+    <h2 class="section-title reveal rd1" style="margin-top:1rem;margin-bottom:0.5rem;color:var(--ink);">Three gentle steps.<br>A lifetime kept.</h2>
+    <div class="steps-grid">
+      <div class="step reveal"><div class="step-num">1</div><h3>Invite a loved one</h3><p>Open A Story and start a session with a parent, grandparent, or aunt. We make it warm and simple — even for the least techy grandparent.</p></div>
+      <div class="step reveal rd1"><div class="step-num">2</div><h3>A Story listens</h3><p>A kind, unhurried voice asks open questions and follows wherever the conversation leads. They just talk — like chatting with a curious grandchild.</p></div>
+      <div class="step reveal rd2"><div class="step-num">3</div><h3>A keepsake takes shape</h3><p>Answers become memory cards on a life timeline — a living story your whole family can revisit, share, and one day hold in their hands.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- PHOTOS (Daylight) -->
+<section id="photos">
+  <div class="split-inner">
+    <div class="split-text">
+      <p class="eyebrow reveal">What gets lost</p>
+      <h2 class="reveal rd1">Every photo<br>has a story<br><em>behind it.</em></h2>
+      <p class="reveal rd2">Who are the two people in the back row no one recognizes? What was happening the week it was taken? Why is everyone laughing so hard?</p>
+      <p class="reveal rd2">The meaning behind a moment lives only in the person who was there. A Story asks them — gently, and at their own pace.</p>
+      <p class="reveal rd3" style="color:var(--ember);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.1rem;">The photo is a door. A Story walks through it with them.</p>
+    </div>
+    <div class="photo-stack reveal rd2">
+      <div class="photo-card" style="width:210px;transform:rotate(-4deg) translate(20px,10px);z-index:1;">
+        <svg class="photo-img" viewBox="0 0 210 160" xmlns="http://www.w3.org/2000/svg">
+          <rect width="210" height="160" fill="#e8d8bd"/><rect width="210" height="84" fill="#d9c39e"/>
+          <ellipse cx="160" cy="42" rx="60" ry="40" fill="rgba(199,162,78,0.3)"/><rect y="84" width="210" height="76" fill="#cdb58e"/>
+          <ellipse cx="70" cy="80" rx="8" ry="16" fill="#6b5536"/><circle cx="70" cy="62" r="6" fill="#6b5536"/>
+          <ellipse cx="100" cy="82" rx="7" ry="14" fill="#6b5536"/><circle cx="100" cy="66" r="5" fill="#6b5536"/>
+          <ellipse cx="130" cy="81" rx="9" ry="15" fill="#6b5536"/><circle cx="130" cy="64" r="6" fill="#6b5536"/>
+          <circle cx="160" cy="36" r="5" fill="rgba(255,240,200,0.8)"/>
+        </svg>
+        <div class="photo-caption">Summer 1962 — who are they?</div>
+        <div class="photo-tag" style="bottom:2.2rem;right:-1rem;font-size:0.68rem;">"That's your great-uncle…"</div>
+      </div>
+      <div class="photo-card" style="width:220px;transform:rotate(2.5deg) translate(-10px,90px);z-index:2;">
+        <svg class="photo-img" viewBox="0 0 220 168" xmlns="http://www.w3.org/2000/svg">
+          <rect width="220" height="168" fill="#e9dabf"/><rect y="98" width="220" height="70" fill="#d3bd95"/>
+          <rect x="20" y="90" width="180" height="9" rx="2" fill="#b89e72"/><ellipse cx="70" cy="90" rx="28" ry="6" fill="#c7b288"/><ellipse cx="150" cy="90" rx="28" ry="6" fill="#c7b288"/>
+          <ellipse cx="110" cy="76" rx="20" ry="26" fill="rgba(199,162,78,0.4)"/><rect x="107" y="56" width="6" height="22" rx="2" fill="#8a6f43"/><ellipse cx="110" cy="54" rx="4" ry="6" fill="#ffe9b0"/>
+          <ellipse cx="60" cy="86" rx="14" ry="22" fill="#6b5536"/><circle cx="60" cy="63" r="9" fill="#6b5536"/>
+          <ellipse cx="155" cy="85" rx="13" ry="20" fill="#6b5536"/><circle cx="155" cy="64" r="8" fill="#6b5536"/>
+          <rect x="168" y="12" width="36" height="50" rx="2" fill="rgba(255,240,200,0.5)" stroke="rgba(199,162,78,0.4)" stroke-width="0.5"/>
+        </svg>
+        <div class="photo-caption">A dinner no one remembered the date of — until now</div>
+        <div class="photo-tag" style="top:0.8rem;left:-0.75rem;">✦ Memory unlocked</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LEGACY (Daylight) -->
+<section id="legacy">
+  <div class="split-inner">
+    <div class="split-text">
+      <p class="eyebrow reveal">The legacy</p>
+      <h2 class="reveal rd1">A digital archive.<br>A physical<br><em>heirloom.</em></h2>
+      <p class="reveal rd2">Every story becomes a memory card — timestamped, searchable, and arranged on a beautiful life timeline. Yours to keep, share with the whole family, and return to whenever you miss them.</p>
+      <p class="reveal rd2">And when you're ready, we turn it into something you can hold.</p>
+    </div>
+    <div class="legacy-cards">
+      <div class="legacy-card reveal rd1"><div class="legacy-icon"><svg viewBox="0 0 32 32" fill="none" stroke="#B45A2B" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="4" width="14" height="24" rx="2.5"/><line x1="9" y1="23" x2="23" y2="23"/><line x1="14" y1="26" x2="18" y2="26"/><circle cx="16" cy="13" r="3.2" stroke="#C7A24E"/><path d="M16 11.4c-.6-.9-2-.6-2 .6 0 .9 2 2 2 2s2-1.1 2-2c0-1.2-1.4-1.5-2-.6z" fill="#C7A24E" stroke="none"/></svg></div><div><h4>Digital story archive</h4><p>Memory cards, life timeline, and the actual sound of their voice — organized and shareable across the family.</p></div></div>
+      <div class="legacy-card reveal rd2"><div class="legacy-icon"><svg viewBox="0 0 32 32" fill="none" stroke="#B45A2B" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8c-2.5-2-6-2.2-9-1.4v17c3-.8 6.5-.6 9 1.4 2.5-2 6-2.2 9-1.4v-17c-3-.8-6.5-.6-9 1.4z"/><line x1="16" y1="8" x2="16" y2="25"/></svg></div><div><h4>Printed memory book</h4><p>A hardcover book of their life — timeline, memories, and the meaning behind the photos — printed and shipped to your door.</p></div></div>
+      <div class="legacy-card reveal rd3"><div class="legacy-icon"><svg viewBox="0 0 32 32" fill="none" stroke="#B45A2B" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="11"/><path d="M16 10v6l4 2.5" stroke="#C7A24E"/></svg></div><div><h4>Kept forever</h4><p>Every word stored safely and passed down. The stories outlast the app, the phone, and the years.</p></div></div>
+    </div>
+  </div>
+  <p class="legacy-whisper reveal">And one day — private letters they can leave for the people they choose.</p>
+</section>
+
+<!-- SAFETY (Daylight) -->
+<section id="safety">
+  <div class="safety-inner">
+    <div style="text-align:center;max-width:620px;margin:0 auto;">
+      <p class="eyebrow reveal">A promise</p>
+      <h2 class="section-title reveal rd1" style="margin-top:1rem;margin-bottom:1.25rem;color:var(--ink);">Their story belongs to<br><em>them. Only them.</em></h2>
+      <p class="reveal rd2" style="font-size:1rem;color:var(--ink-soft);line-height:1.85;">These are the most precious things a family owns. We treat them that way. A Story is private by design — the person telling their story is the only one who decides where it goes. Not us. Not anyone else.</p>
+    </div>
+    <div class="safety-grid">
+      <div class="safety-card reveal rd1">
+        <div class="safety-ic"><svg viewBox="0 0 32 32" fill="none" stroke="#B45A2B" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4l9 4v6c0 6-4 10-9 12-5-2-9-6-9-12V8l9-4z"/><path d="M12 16l3 3 5-6" stroke="#C7A24E"/></svg></div>
+        <h4>Theirs to share</h4>
+        <p>Only the storyteller can share a memory or invite family in. Nothing is shared without their say-so — ever.</p>
+      </div>
+      <div class="safety-card reveal rd2">
+        <div class="safety-ic"><svg viewBox="0 0 32 32" fill="none" stroke="#B45A2B" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="14" width="18" height="13" rx="2.5"/><path d="M11 14v-3a5 5 0 0 1 10 0v3"/><circle cx="16" cy="20" r="1.6" fill="#C7A24E" stroke="none"/></svg></div>
+        <h4>Encrypted &amp; safe</h4>
+        <p>Every word and recording is stored securely and encrypted. Their voice is protected like the heirloom it is.</p>
+      </div>
+      <div class="safety-card reveal rd3">
+        <div class="safety-ic"><svg viewBox="0 0 32 32" fill="none" stroke="#B45A2B" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="12"/><path d="M16 8v8M16 16l5 3"/><path d="M7 13c1.5-4 5-6 9-6" stroke="#C7A24E"/></svg></div>
+        <h4>Never sold, never trained on</h4>
+        <p>We will never sell your family's stories, show them to advertisers, or use them to train outside AI. They aren't a product.</p>
+      </div>
+    </div>
+    <p class="safety-pledge reveal">No one sees their story unless they choose to share it — not us, not anyone.</p>
+  </div>
+</section>
+
+<!-- THE GIFT (Daylight) -->
+<section id="gift">
+  <div style="max-width:760px;width:100%;text-align:center;display:flex;flex-direction:column;align-items:center;">
+    <p class="eyebrow reveal">The gift</p>
+    <h2 class="section-title reveal rd1" style="margin-top:1rem;margin-bottom:1.25rem;color:var(--ink);">For the people who have<br><em>everything but time.</em></h2>
+    <p class="reveal rd2" style="font-size:1rem;color:var(--ink-soft);line-height:1.85;max-width:580px;margin-bottom:2.5rem;">What do you give the grandmother who needs nothing, the father who waves off every present? Not another scarf. Give them the one thing no one ever does — <strong style="color:var(--ink);font-weight:500;">someone to ask, and to listen.</strong> A Story is the gift they'll open again and again, and the one your whole family keeps long after.</p>
+    <div class="gift-grid">
+      <div class="gift-card reveal rd1"><div class="gift-occasion">Birthdays</div><p>The gift that finally feels worthy of a milestone year.</p></div>
+      <div class="gift-card reveal rd2"><div class="gift-occasion">The holidays</div><p>Gather the family around one screen and let the stories pour out.</p></div>
+      <div class="gift-card reveal rd3"><div class="gift-occasion">"Just because"</div><p>Before a diagnosis, before a move, before someday becomes too late.</p></div>
+    </div>
+    <p class="reveal rd2" style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.3rem;color:var(--ember);margin-top:2.75rem;">The present that becomes a part of the family forever.</p>
+  </div>
+</section>
+
+<!-- TIMELINE (Daylight) -->
+<section id="timeline">
+  <div class="timeline-heading">
+    <p class="eyebrow reveal">The life timeline</p>
+    <h2 class="section-title reveal rd1" style="margin-top:1rem;margin-bottom:0.5rem;color:var(--ink);">Every memory,<br>in its place.</h2>
+    <p class="reveal rd2" style="font-size:0.87rem;color:var(--ink-soft);font-weight:300;max-width:380px;margin:0.75rem auto 0;">A gentle, scrollable map of a life — built one conversation at a time.</p>
+  </div>
+  <div class="timeline-scroll-wrapper reveal rd2">
+    <div class="timeline-track">
+      <div class="tl-event above"><div class="tl-card"><div class="tl-card-year">1952</div><div class="tl-card-text">"Born in a small house outside Kraków, the third of five children."</div></div><div class="tl-dot-row"><div class="tl-stem"></div><div class="tl-dot"></div></div><div class="tl-year">1952</div></div>
+      <div class="tl-event below"><div class="tl-dot-row"><div class="tl-dot"></div><div class="tl-stem"></div></div><div class="tl-card"><div class="tl-card-year">1961</div><div class="tl-card-text">"The church dance. Joe spilled punch down my dress — then asked me to dance."</div></div><div class="tl-year">1961</div></div>
+      <div class="tl-event above"><div class="tl-card"><div class="tl-card-year">1962</div><div class="tl-card-text">"We married fourteen months after that first dance. I wore my sister's veil."</div></div><div class="tl-dot-row"><div class="tl-stem"></div><div class="tl-dot"></div></div><div class="tl-year">1962</div></div>
+      <div class="tl-event below"><div class="tl-dot-row"><div class="tl-dot"></div><div class="tl-stem"></div></div><div class="tl-card"><div class="tl-card-year">1974</div><div class="tl-card-text">"The year your mother was born. I didn't sleep for six months."</div></div><div class="tl-year">1974</div></div>
+      <div class="tl-event above"><div class="tl-card"><div class="tl-card-year">1989</div><div class="tl-card-text">"We opened the shop with $400 and a borrowed table. I was terrified."</div></div><div class="tl-dot-row"><div class="tl-stem"></div><div class="tl-dot"></div></div><div class="tl-year">1989</div></div>
+      <div class="tl-event below"><div class="tl-dot-row"><div class="tl-dot"></div><div class="tl-stem"></div></div><div class="tl-card"><div class="tl-card-year">2003</div><div class="tl-card-text">"The first time I held you. I knew everything would be okay."</div></div><div class="tl-year">2003</div></div>
+      <!-- dup for testing -->
+      <div class="tl-event above"><div class="tl-card"><div class="tl-card-year">1989</div><div class="tl-card-text">"We opened the shop with $400 and a borrowed table. I was terrified."</div></div><div class="tl-dot-row"><div class="tl-stem"></div><div class="tl-dot"></div></div><div class="tl-year">1989</div></div>
+      <div class="tl-event below"><div class="tl-dot-row"><div class="tl-dot"></div><div class="tl-stem"></div></div><div class="tl-card"><div class="tl-card-year">2003</div><div class="tl-card-text">"The first time I held you. I knew everything would be okay."</div></div><div class="tl-year">2003</div></div>
+      <div class="tl-event above"><div class="tl-card"><div class="tl-card-year">1989</div><div class="tl-card-text">"We opened the shop with $400 and a borrowed table. I was terrified."</div></div><div class="tl-dot-row"><div class="tl-stem"></div><div class="tl-dot"></div></div><div class="tl-year">1989</div></div>
+      <div class="tl-event below"><div class="tl-dot-row"><div class="tl-dot"></div><div class="tl-stem"></div></div><div class="tl-card"><div class="tl-card-year">2003</div><div class="tl-card-text">"The first time I held you. I knew everything would be okay."</div></div><div class="tl-year">2003</div></div>
+    </div>
+  </div>
+  <div class="timeline-scroll-hint">scroll</div>
+</section>
+
+<!-- TESTIMONIAL (Daylight) -->
+<section id="testimonial">
+  <div style="display:flex;flex-direction:column;align-items:center;text-align:center;">
+    <div class="testimonial-quote reveal">I gave it to my mom for her birthday, half expecting her to shrug. Instead she talked for two hours — about my dad, about how they met. I'd never heard that story. Now my kids will have it forever.</div>
+    <p class="testimonial-attr reveal rd1">— Beta tester, gift for her mother</p>
+    <p class="testimonial-disclaimer reveal rd2">From our early testing group. We'll add real reviews at launch.</p>
+  </div>
+</section>
+
+<!-- WAITLIST (Daylight) -->
+<section id="waitlist">
+  <div class="waitlist-glow"></div>
+  <div class="urgency-badge reveal"><span class="pulse-dot"></span>Founding families · first 500 spots</div>
+  <h2 class="waitlist-title reveal">Don't wait for<br><em>"someday."</em></h2>
+  <p class="waitlist-sub reveal rd1">Someday is how the stories get lost. The first 500 families get 3 months free — and enter a raffle for one of 5 lifetime memberships. Join now and give the people you love the gift of being asked.</p>
+  <div class="app-badges reveal rd2">
+    <div class="app-badge"><div class="app-badge-icon"><svg viewBox="0 0 24 24" fill="#2B2117"><path d="M17.05 12.5c-.02-2.05 1.68-3.03 1.75-3.08-.95-1.4-2.43-1.59-2.96-1.61-1.26-.13-2.46.74-3.1.74-.64 0-1.62-.72-2.67-.7-1.37.02-2.64.8-3.35 2.03-1.43 2.48-.37 6.15 1.02 8.16.68.98 1.49 2.08 2.55 2.04 1.02-.04 1.41-.66 2.65-.66 1.23 0 1.58.66 2.66.64 1.1-.02 1.79-1 2.46-1.99.78-1.14 1.1-2.25 1.12-2.31-.02-.01-2.15-.83-2.18-3.29zM15.02 6.5c.56-.68.94-1.62.83-2.56-.81.03-1.79.54-2.37 1.21-.52.6-.97 1.56-.85 2.48.9.07 1.83-.46 2.39-1.13z"/></svg></div><div class="app-badge-text"><span class="app-badge-soon">Coming soon</span><span class="app-badge-name">App Store</span></div></div>
+    <div class="app-badge"><div class="app-badge-icon"><svg viewBox="0 0 24 24"><path d="M3.6 2.4c-.2.22-.32.55-.32.99v17.22c0 .44.12.77.33.98l.06.06 9.65-9.64v-.02L3.66 2.34l-.06.06z" fill="#B45A2B"/><path d="M16.5 15.3l-3.18-3.18v-.02l3.19-3.19.07.04 3.81 2.16c1.09.62 1.09 1.63 0 2.25l-3.81 2.16-.08-.02z" fill="#C7A24E"/><path d="M16.58 15.28L13.32 12 3.6 21.7c.36.38.95.43 1.62.06l11.36-6.48z" fill="#D9A97B"/><path d="M16.58 8.72L5.22 2.24c-.67-.38-1.26-.33-1.62.05L13.32 12l3.26-3.28z" fill="#a14e22"/></svg></div><div class="app-badge-text"><span class="app-badge-soon">Coming soon</span><span class="app-badge-name">Google Play</span></div></div>
+  </div>
+  <div class="waitlist-form reveal rd3" id="wl-form-wrap">
+    <label for="wl-fname" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">First name</label>
+    <input type="text" class="waitlist-input" id="wl-fname" name="fname" placeholder="First name" oninput="this.value=this.value.replace(/[^a-zA-Z\s]/g,'')">
+    <label for="wl-lname" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Last name</label>
+    <input type="text" class="waitlist-input" id="wl-lname" name="lname" placeholder="Last name" oninput="this.value=this.value.replace(/[^a-zA-Z\s]/g,'')">
+    <label for="wl-phone" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">US phone number</label>
+    <input type="tel" class="waitlist-input" id="wl-phone" name="phone" placeholder="+1 (000) 000-0000" oninput="this.value=this.value.replace(/[^0-9+\-()\s]/g,'')">
+    <button class="waitlist-btn" onclick="submitWaitlist()">Claim my spot</button>
+  </div>
+  <div class="success-msg" id="success-msg">You're in. We'll be in touch soon — keep an eye out.</div>
+  <p class="waitlist-note reveal rd4">No spam, ever. Just a gentle note the moment we're ready for you.</p>
+  <p class="waitlist-tagline reveal rd4">Before it's too late to ask.</p>
+</section>
+</div>
+
+
+<!-- OUR STORY PAGE — shown when nav "Our Story" clicked -->
+<div id="our-story-page" style="display:none;position:fixed;inset:0;z-index:500;overflow-y:auto;background:var(--paper);">
+  <div style="position:sticky;top:0;z-index:10;padding:1.1rem 3rem;display:flex;align-items:center;justify-content:space-between;background:rgba(239,230,212,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);">
+    <div style="display:flex;align-items:center;gap:10px;font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:600;color:var(--ink);">
+      <svg aria-hidden="true" width="28" height="28" viewBox="0 0 64 64"><path d="M32 9 C24 23 16 41 11 55 L18 55 C27 41 30 25 32 13 Z" fill="#2B2117"/><path d="M32 9 C40 23 48 41 53 55 L46 55 C37 41 34 25 32 13 Z" fill="#2B2117"/><g transform="translate(23.33,29.33) scale(0.542)" fill="#B45A2B"><path d="M16 29 C16 29 4 20 4 11 C4 6 8 3 12 3 C14 3 16 5 16 6 C16 5 18 3 20 3 C24 3 28 6 28 11 C28 20 16 29 16 29 Z"/></g></svg>
+      Story
+    </div>
+    <button onclick="closeOurStory()" style="background:none;border:none;cursor:pointer;font-family:'Figtree',sans-serif;font-size:0.76rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-soft);display:flex;align-items:center;gap:0.4rem;padding:0.5rem 0;transition:color 0.3s;" onmouseover="this.style.color='var(--ember)'" onmouseout="this.style.color='var(--ink-soft)'">
+      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Back
+    </button>
+  </div>
+
+<!-- OUR STORY — merged founder page -->
+<div id="our-story">
+  <div class="story-hero">
+    <div class="sglow"></div>
+    <p class="story-eyebrow reveal">A note from the founder</p>
+    <h2 class="story-title reveal rd1">I spent years learning to measure<br>the things that matter. Then I watched<br>the thing that <em>mattered most</em><br>start to slip away.</h2>
+    <p class="story-hero-sub reveal rd2">Who I am, and the moment that changed everything I'm building.</p>
+  </div>
+
+  <div class="story-article">
+    <p class="lead reveal">My name is Daniel. I'm a Finance Master's student at the University of Illinois Urbana-Champaign, on a track toward a PhD and a career as a finance professor. And I'm telling you that because it explains how A Story happened — and why it almost didn't.</p>
+
+    <p class="reveal">I've spent my academic life studying systems. Markets, models, the way numbers carry signal about the world. I'm good at it. Good enough that the path ahead was clear: research, tenure, a quiet life of teaching. I wasn't looking for a startup idea. I wasn't looking for anything.</p>
+
+    <p class="reveal">Then this year, two of my uncles had strokes.</p>
+
+    <div class="pull reveal">Not one. Two. Within months of each other.</div>
+
+    <p class="reveal">I watched it happen. I watched men who had carried our family's history — who knew the names, the reasons, the way we got here — suddenly struggle to find words that had always come easily. And it hit me the way a proof hits you when you finally see it: <strong>the stories were leaving first.</strong> Before anything else. The memories of their own lives, going quiet before the people themselves did.</p>
+
+    <p class="reveal">I started doing what I always do. I started doing the math. How many conversations had I assumed I'd have someday? How many questions had I been saving for a later that was, quietly, running out? I realized I didn't know how my grandparents met. I didn't know what my uncles were afraid of, what they were proudest of, what they'd do differently. I had spent years studying how to understand the world — and I had never once turned that attention to the people who shaped mine.</p>
+
+    <p class="reveal">There's no model for that loss. No regression that tells you what a story was worth. You just feel it — a door closing in a room you didn't know you needed.</p>
+
+    <p class="reveal">So I stopped waiting for someday. I started building <strong>A Story</strong>.</p>
+
+    <p class="reveal">The idea is simple because the need is simple: someone, finally, to ask. Not a journalist. Not a therapist. A warm presence that sits with the people you love and says: <em>I have time. Tell me everything.</em> And then turns what they share into something a family can keep — in their own voice, in their own words, arranged into the shape of a life.</p>
+
+    <p class="reveal">I'm not a lifelong engineer. What I bring is the discipline of a researcher who learned to be patient with hard problems, and a need so personal I can't put it down. I'm not building this because it's a good market. I'm building it because I almost ran out of time, and I think you might be closer to that than you realize too.</p>
+
+    <p class="reveal"><strong>Here's what I know:</strong> somewhere tonight, there is a parent who carries a story no one has ever asked about. A grandparent with a whole life in their chest, waiting for someone to open the door. They won't bring it up themselves. They don't want to be a burden. They're waiting to be asked.</p>
+
+    <p class="reveal">Ask them. Before someday becomes too late.</p>
+
+    <p class="reveal">I'm a real person, and I'd genuinely love to hear from you.</p>
+
+    <div class="story-signature reveal">
+      <div class="sig-pic">D</div>
+      <div>
+        <div class="sig-name">Daniel Hoang Nguyen</div>
+        <div class="sig-role">Founder, A Story · Finance Master's, UIUC</div>
+        <a href="https://www.linkedin.com/in/daniel-hoang-nguyen-65bb05224/" target="_blank" rel="noopener" class="sig-link">Connect on LinkedIn →</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="story-cta">
+    <h2 class="reveal">Some stories are still <em>being told.</em></h2>
+    <p class="reveal">Don't wait for someday. Join the founding families and start before another year of memories slips away.</p>
+    <button class="cta-btn reveal" onclick="document.getElementById('waitlist').scrollIntoView({behavior: prefersReduced ? 'auto' : 'smooth'})">Claim my early spot</button>
+  </div>
+</div>
+
+
+<footer>
+  <div class="f-logo">
+    <svg width="20" height="20" viewBox="0 0 64 64"><path d="M32 9 C24 23 16 41 11 55 L18 55 C27 41 30 25 32 13 Z" fill="#EFE6D4"/><path d="M32 9 C40 23 48 41 53 55 L46 55 C37 41 34 25 32 13 Z" fill="#EFE6D4"/><g transform="translate(23.33,29.33) scale(0.542)" fill="#C7A24E"><path d="M16 29 C16 29 4 20 4 11 C4 6 8 3 12 3 C14 3 16 5 16 6 C16 5 18 3 20 3 C24 3 28 6 28 11 C28 20 16 29 16 29 Z"/></g></svg>
+    Story
+  </div>
+  <div class="f-meta">© 2026 · <a href="mailto:contact@astoryapp.com">contact@astoryapp.com</a> · iOS &amp; Android coming soon</div>
+</footer>
+</div>
+
+
+
+<footer>
+  <div class="f-logo">
+    <svg width="20" height="20" viewBox="0 0 64 64"><path d="M32 9 C24 23 16 41 11 55 L18 55 C27 41 30 25 32 13 Z" fill="#EFE6D4"/><path d="M32 9 C40 23 48 41 53 55 L46 55 C37 41 34 25 32 13 Z" fill="#EFE6D4"/><g transform="translate(23.33,29.33) scale(0.542)" fill="#C7A24E"><path d="M16 29 C16 29 4 20 4 11 C4 6 8 3 12 3 C14 3 16 5 16 6 C16 5 18 3 20 3 C24 3 28 6 28 11 C28 20 16 29 16 29 Z"/></g></svg>
+    Story
+  </div>
+  <div class="f-meta">© 2026 · <a href="mailto:contact@astoryapp.com">contact@astoryapp.com</a> · iOS &amp; Android coming soon</div>
+</footer>
+
+<script>
+const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* hero embers */
+(function(){const c=document.getElementById('hero-particles');if(!c)return;const cols=['#C7A24E','#B45A2B','#D9A97B'];for(let i=0;i<18;i++){const p=document.createElement('div');p.className='ember-dot';const s=Math.random()*3+1.5;p.style.cssText=`width:${s}px;height:${s}px;background:${cols[i%3]};left:${Math.random()*100}%;bottom:-2%;--dx:${(Math.random()-0.5)*160}px;animation-duration:${11+Math.random()*12}s;animation-delay:${Math.random()*10}s;`;c.appendChild(p);}})();
+window.addEventListener('scroll',()=>document.getElementById('main-nav').classList.toggle('scrolled',window.scrollY>50));
+
+/* scroll progress bar */
+const sp=document.getElementById('scroll-progress');
+window.addEventListener('scroll',()=>{const h=document.documentElement.scrollHeight-window.innerHeight;sp.style.width=(h>0?(window.scrollY/h)*100:0)+'%';},{passive:true});
+
+/* gentle hero glow parallax */
+const heroSun=document.querySelector('.hero-sun');
+window.addEventListener('scroll',()=>{if(heroSun&&window.scrollY<900){heroSun.style.transform='translateY('+(window.scrollY*0.25)+'px)';}},{passive:true});
+
+/* background music — starts muted, plays after unlockContent(), icon = mute/unmute */
+const music=document.getElementById('bg-music');const musicBtn=document.getElementById('music-toggle');
+const iconOn=document.getElementById('icon-sound-on');const iconOff=document.getElementById('icon-sound-off');
+let musicWanted=false,musicMuted=false,fadeTimer=null,contentUnlocked=false;
+music.volume=0;
+function updateMusicIcon(){if(musicMuted||!musicWanted){iconOn.style.display='none';iconOff.style.display='block';musicBtn.title='Unmute music';musicBtn.classList.remove('playing');}else{iconOn.style.display='block';iconOff.style.display='none';musicBtn.title='Mute music';musicBtn.classList.add('playing');}}
+function fadeTo(target,ms){clearInterval(fadeTimer);const start=music.volume,steps=20,step=(target-start)/steps;let n=0;fadeTimer=setInterval(()=>{n++;music.volume=Math.min(1,Math.max(0,start+step*n));if(n>=steps){clearInterval(fadeTimer);music.volume=target;}},ms/steps);}
+function playMusic(){music.play().then(()=>{fadeTo(0.55,1200);}).catch(()=>{});}
+function pauseMusicSoft(){if(/iPhone|iPad|iPod/.test(navigator.userAgent)){music.pause();music.volume=0;} else {fadeTo(0,600);setTimeout(()=>{if(music.volume<0.01)music.pause();},650);}}
+function toggleMusic(){if(!musicWanted) return;
+musicMuted=!musicMuted;if(musicMuted){pauseMusicSoft();}else{music.play().then(()=>fadeTo(0.55,600)).catch(()=>{});}updateMusicIcon();}
+function startMusicAfterUnlock(){if(musicWanted)return;musicWanted=true;musicMuted=false;music.play().then(()=>{fadeTo(0.55,1400);updateMusicIcon();}).catch(()=>{});}
+function stopMusic(){fadeTo(0,500);setTimeout(()=>music.pause(),520);updateMusicIcon();}
+function resumeMusicIfWanted(){if(musicWanted&&!musicMuted){music.play().then(()=>{fadeTo(0.55,1000);updateMusicIcon();}).catch(()=>{});}}
+
+/* intersection observer for reveals */
+const io=new IntersectionObserver(en=>{en.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:0.12});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+/* counters */
+function animateCount(el,target,suffix,dur){dur=dur||2200;let start=null;function step(ts){if(!start)start=ts;const p=Math.min((ts-start)/dur,1);const ease=1-Math.pow(1-p,3);const val=Math.max(0,Math.floor(ease*target));el.textContent=val.toLocaleString()+(suffix||'');if(p<1)requestAnimationFrame(step);else el.textContent=target.toLocaleString()+(suffix||'');}requestAnimationFrame(step);}
+let cs=false;const cio=new IntersectionObserver(en=>{if(en[0].isIntersecting&&!cs){cs=true;animateCount(document.getElementById('cnt1'),40000,'+',2400);animateCount(document.getElementById('cnt2'),67,'%',2600);animateCount(document.getElementById('cnt3'),1000000,'+',2800);}},{threshold:0.4});
+cio.observe(document.getElementById('hook'));
+
+/* demo */
+const chat=document.getElementById('phone-chat'),statusEl=document.getElementById('app-status'),micBtn=document.getElementById('mic-btn'),micLabel=document.getElementById('mic-label'),replayBtn=document.getElementById('demo-replay');
+let demoRunning=false;
+const script=[
+  {who:'ai',text:"Hi Margaret. We don't have to do anything big today — what's one thing you'd like to keep? A moment, a person, anything at all."},
+  {who:'elder',text:"Oh, I don't know… I'm not sure where to even start."},
+  {who:'ai',text:"That's alright — most people aren't. Here's a thought: how about the day you met Joe? Where were you when you first saw him?"},
+  {who:'elder',text:"Oh! It was a church dance, 1961. I wasn't even going to go. He spilled punch all down my dress and turned bright red."},
+  {who:'ai',text:"He spilled punch on you! What did he do then?"},
+  {who:'elder',text:"He was so flustered he asked me to dance to make up for it. We danced every song after that. We were married fourteen months later."},
+  {who:'ai',text:"Fourteen months. From a spilled cup of punch to the rest of your life. I'm keeping this one — your grandchildren are going to love it."},
+  {who:'card',text:'"A church dance, 1961. Joe spilled punch down my dress, turned bright red, and asked me to dance to make up for it. We were married fourteen months later."',meta:'How we met · Joe · 1961'}
+];
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+function speak(text){return new Promise(resolve=>{if(!('speechSynthesis' in window)){resolve();return;}window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.rate=0.9;u.pitch=1.12;u.volume=0.9;const v=window.speechSynthesis.getVoices();const pref=v.find(x=>x.name.includes('Samantha'))||v.find(x=>x.name.includes('Karen'))||v.find(x=>x.name.includes('Victoria'))||v.find(x=>x.lang.startsWith('en')&&x.name.toLowerCase().includes('female'))||v.find(x=>x.lang.startsWith('en'))||null;if(pref)u.voice=pref;u.onend=()=>resolve();u.onerror=()=>resolve();window.speechSynthesis.speak(u);setTimeout(resolve,Math.min(text.length*70,9000));});}
+function scrollChat(){chat.scrollTop=chat.scrollHeight;}
+function addSpeaking(){const r=document.createElement('div');r.className='speaking-row';const hs=[14,22,18,26,20,16,12];for(let i=0;i<7;i++){const b=document.createElement('div');b.className='sbar';b.style.height=hs[i]+'px';b.style.animationDelay=(i*0.08)+'s';b.style.animationDuration=(0.5+Math.random()*0.3).toFixed(2)+'s';r.appendChild(b);}chat.appendChild(r);requestAnimationFrame(()=>{r.classList.add('show');scrollChat();});return r;}
+function addListening(){const r=document.createElement('div');r.className='listening-row';r.innerHTML='<span class="listening-label">listening</span><span class="dot"></span><span class="dot"></span><span class="dot"></span>';chat.appendChild(r);requestAnimationFrame(()=>{r.classList.add('show');scrollChat();});return r;}
+function addBubble(who,text){const b=document.createElement('div');b.className='msg '+(who==='ai'?'msg-ai':'msg-elder');b.textContent=text;chat.appendChild(b);requestAnimationFrame(()=>{b.classList.add('show');scrollChat();});return b;}
+function addCard(text,meta){const c=document.createElement('div');c.className='app-memory-card';c.innerHTML='<div class="amc-chip"><span class="d"></span>Memory saved</div><div class="amc-text">'+text+'</div><div class="amc-saved">\u2756 Added to Margaret\'s timeline</div>';chat.appendChild(c);requestAnimationFrame(()=>{c.classList.add('show');scrollChat();});return c;}
+async function startDemo(){if(demoRunning)return;demoRunning=true;micBtn.disabled=true;micLabel.textContent='Playing\u2026';chat.innerHTML='';stopMusic();
+  for(const t of script){
+    if(t.who==='ai'){statusEl.textContent='A Story is speaking\u2026';const sp=addSpeaking();const b=addBubble('ai','');const speakP=speak(t.text);let i=0;await new Promise(res=>{const iv=setInterval(()=>{b.textContent+=t.text[i++];scrollChat();if(i>=t.text.length){clearInterval(iv);res();}},32);});await speakP;sp.remove();await delay(350);}
+    else if(t.who==='elder'){statusEl.textContent='Margaret is talking\u2026';const li=addListening();await delay(1100);li.remove();const b=addBubble('elder','');let i=0;await new Promise(res=>{const iv=setInterval(()=>{b.textContent+=t.text[i++];scrollChat();if(i>=t.text.length){clearInterval(iv);res();}},26);});await delay(400);}
+    else{statusEl.textContent='Saving a memory\u2026';await delay(500);addCard(t.text,t.meta);await delay(600);}
+  }
+  statusEl.textContent='Memory saved to timeline';micLabel.textContent='That was one moment of many';replayBtn.classList.add('show');demoRunning=false;resumeMusicIfWanted();}
+function resetDemo(){if(demoRunning)return;window.speechSynthesis&&window.speechSynthesis.cancel();chat.innerHTML='';statusEl.textContent='Ready when you are';micBtn.disabled=false;micLabel.textContent='Tap to play the demo';replayBtn.classList.remove('show');startDemo();}
+if('speechSynthesis' in window){window.speechSynthesis.getVoices();window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();}
+
+/* unlock content gate on "Hear it in action" click */
+function unlockContent(){
+  contentUnlocked=true;
+  // iOS Safari: play() MUST be called synchronously inside the touch handler
+  music.play().then(()=>{fadeTo(0.55,1400);musicMuted=false;updateMusicIcon();}).catch(()=>{});
+  musicWanted=true;
+  const gate=document.getElementById('content-gate');
+  gate.style.display='block';
+  gate.querySelectorAll('.reveal:not(.in)').forEach(el=>io.observe(el));
+  const hookEl=document.getElementById('hook');if(hookEl)cio.observe(hookEl);
+  setTimeout(()=>document.getElementById('hook').scrollIntoView({behavior: prefersReduced ? 'auto' : 'smooth'}),80);
+  const hb=document.getElementById('hear-btn');if(hb)hb.style.display='none';
+}
+
+/* Iimeline hint */
+const tlWrapper = document.querySelector('.timeline-scroll-wrapper');
+const tlHint = document.querySelector('.timeline-scroll-hint');
+if(tlWrapper && tlHint){
+  tlWrapper.addEventListener('scroll', () => {
+    if(tlWrapper.scrollLeft > 20){
+      tlHint.style.opacity = '0';
+      tlHint.style.transition = 'opacity 0.4s';
+    } else {
+      tlHint.style.opacity = '0.7';
+      tlHint.style.transition = 'opacity 0.4s';
+    }
+  });
+}
+
+/* Our Story overlay */
+function openOurStory(){
+  const page=document.getElementById('our-story-page');
+  page.style.display='block';
+  document.body.style.overflow='hidden';
+  page.scrollTop=0;
+  // re-run reveals inside overlay
+  page.querySelectorAll('.reveal:not(.in)').forEach(el=>io.observe(el));
+  // move focus into the overlay
+  const closeBtn = page.querySelector('button');
+  closeBtn.focus();
+  // trap focus inside overlay
+  page.addEventListener('keydown', trapFocus);
+}
+
+// no behind-the-scence delay Tab
+function trapFocus(e) {
+  if (e.key !== 'Tab') return;
+  const page = document.getElementById('our-story-page');
+  const focusable = page.querySelectorAll('a, button, input, [tabindex="0"]');
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+
+  if (e.shiftKey) {
+    if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+  } else {
+    if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+}
+
+function closeOurStory(){
+  const page = document.getElementById('our-story-page');
+  page.style.display = 'none';
+  document.body.style.overflow = '';
+  page.removeEventListener('keydown', trapFocus);
+}
+
+function submitWaitlist(){
+  const fname = document.getElementById('wl-fname').value.trim();
+  const lname = document.getElementById('wl-lname').value.trim();
+  const phone = document.getElementById('wl-phone').value.trim();
+  const fnameEl = document.getElementById('wl-fname');
+  const lnameEl = document.getElementById('wl-lname');
+  const phoneEl = document.getElementById('wl-phone');
+
+  let valid = true;
+
+  if(!fname){ fnameEl.style.borderColor='#a8513a'; valid=false; } else { fnameEl.style.borderColor=''; }
+  if(!lname){ lnameEl.style.borderColor='#a8513a'; valid=false; } else { lnameEl.style.borderColor=''; }
+  if(!/^\d{10}$/.test(phone.replace(/\D/g,''))){ phoneEl.style.borderColor='#a8513a'; valid=false; } else { phoneEl.style.borderColor=''; }
+
+  if(!valid) return;
+
+  document.getElementById('wl-form-wrap').style.display='none';
+  const m=document.getElementById('success-msg');
+  m.style.display='block';
+  setTimeout(()=>m.style.opacity='1',50);
+}
+
+function checkWaitlistForm() {
+  const fname = document.getElementById('wl-fname').value.trim();
+  const lname = document.getElementById('wl-lname').value.trim();
+  const phone = document.getElementById('wl-phone').value.trim();
+  const btn = document.getElementById('claim-btn');
+  const valid = fname.length > 0 && lname.length > 0 && phone.length >= 7;
+  btn.disabled = !valid;
+}
+
+const fnameInput = document.getElementById('wl-fname');
+if(fnameInput) {
+  document.getElementById('wl-fname').addEventListener('input', checkWaitlistForm);
+  document.getElementById('wl-lname').addEventListener('input', checkWaitlistForm);
+  document.getElementById('wl-phone').addEventListener('input', checkWaitlistForm);
+}
+
+</script>
+</body>
+
+
+</html>
