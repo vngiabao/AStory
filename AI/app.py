@@ -7,7 +7,7 @@ import prompts
 
 load_dotenv()
 
-app = Flask(__name__, static_folder='.')
+app = Flask(__name__, static_folder='..')
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Single in-memory conversation (one session at a time)
@@ -15,10 +15,23 @@ conversation = [
     {"role": "developer", "content": prompts.instructions}
 ]
 
+# Stores base64 MP3 strings keyed by incrementing message ID
+audio_store: dict[int, str] = {}
+_msg_counter = 0
+
+def _next_msg_id() -> int:
+    global _msg_counter
+    _msg_counter += 1
+    return _msg_counter
+
 
 @app.route('/')
 def index():
-    return send_from_directory('.', 'index.html')
+    return send_from_directory('..', 'index.html')
+
+@app.route('/<path:filename>')
+def static_files(filename):
+    return send_from_directory('..', filename)
 
 def make_tts(text):
     s = client.audio.speech.create(
@@ -42,6 +55,8 @@ def closing_sequence():
     )
     closing_reply = closing_response.choices[0].message.content
     closing_audio_b64 = make_tts(closing_reply)
+    closing_id = _next_msg_id()
+    audio_store[closing_id] = closing_audio_b64
 
     # Build plain transcript for summarizer (skip system messages)
     transcript_lines = []
@@ -64,9 +79,17 @@ def closing_sequence():
     return jsonify({
         "closing_reply": closing_reply,
         "closing_audio": closing_audio_b64,
+        "closing_msg_id": closing_id,
         "summary":       summary,
         "session_ended": True,
     })
+
+@app.route('/api/reset', methods=['POST'])
+def reset():
+    global conversation, _msg_counter
+    conversation = [{"role": "developer", "content": prompts.instructions}]
+    _msg_counter = 0
+    return jsonify({"ok": True})
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
@@ -88,6 +111,8 @@ def chat():
     reply = response.choices[0].message.content
     conversation.append({"role": "assistant", "content": reply})
     audio_b64 = make_tts(reply)
+    msg_id = _next_msg_id()
+    audio_store[msg_id] = audio_b64
 
     # Print cost debugging info to console
     print()
@@ -98,7 +123,15 @@ def chat():
     print(f"Tokens used: {response.usage.total_tokens} (Prompt: {response.usage.prompt_tokens}, Completion: {response.usage.completion_tokens})")
     print()
 
-    return jsonify({"reply": reply, "audio": audio_b64})
+    return jsonify({"reply": reply, "audio": audio_b64, "msg_id": msg_id})
+
+
+@app.route('/api/audio/<int:msg_id>')
+def get_audio(msg_id):
+    audio = audio_store.get(msg_id)
+    if not audio:
+        return jsonify({"error": "not found"}), 404
+    return jsonify({"audio": audio})
 
 
 @app.route('/api/transcribe', methods=['POST'])
