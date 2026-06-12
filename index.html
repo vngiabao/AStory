@@ -459,8 +459,8 @@ footer .f-meta{color:rgba(239,230,212,0.4);}
     <div class="phone">
       <div class="phone-statusbar"><span>9:41</span><span>A Story</span></div>
       <div class="phone-appbar">
-        <div class="app-elder-avatar">M</div>
-        <div><div class="app-elder-name">Margaret · Grandma</div><div class="app-elder-status" id="app-status">Ready when you are</div></div>
+        <div class="app-elder-avatar">Y</div>
+        <div><div class="app-elder-name">Your loved one · Family</div><div class="app-elder-status" id="app-status">Ready when you are</div></div>
         <div class="app-logo-mini">
           <svg aria-hidden="true" width="16" height="16" viewBox="0 0 64 64"><path d="M32 9 C24 23 16 41 11 55 L18 55 C27 41 30 25 32 13 Z" fill="#EFE6D4"/><path d="M32 9 C40 23 48 41 53 55 L46 55 C37 41 34 25 32 13 Z" fill="#EFE6D4"/><g transform="translate(23.33,29.33) scale(0.542)" fill="#C7A24E"><path d="M16 29 C16 29 4 20 4 11 C4 6 8 3 12 3 C14 3 16 5 16 6 C16 5 18 3 20 3 C24 3 28 6 28 11 C28 20 16 29 16 29 Z"/></g></svg>
           Story
@@ -776,33 +776,84 @@ cio.observe(document.getElementById('hook'));
 
 /* demo */
 const chat=document.getElementById('phone-chat'),statusEl=document.getElementById('app-status'),micBtn=document.getElementById('mic-btn'),micLabel=document.getElementById('mic-label'),replayBtn=document.getElementById('demo-replay');
-let demoRunning=false;
-const script=[
-  {who:'ai',text:"Hi Margaret. We don't have to do anything big today — what's one thing you'd like to keep? A moment, a person, anything at all."},
-  {who:'elder',text:"Oh, I don't know… I'm not sure where to even start."},
-  {who:'ai',text:"That's alright — most people aren't. Here's a thought: how about the day you met Joe? Where were you when you first saw him?"},
-  {who:'elder',text:"Oh! It was a church dance, 1961. I wasn't even going to go. He spilled punch all down my dress and turned bright red."},
-  {who:'ai',text:"He spilled punch on you! What did he do then?"},
-  {who:'elder',text:"He was so flustered he asked me to dance to make up for it. We danced every song after that. We were married fourteen months later."},
-  {who:'ai',text:"Fourteen months. From a spilled cup of punch to the rest of your life. I'm keeping this one — your grandchildren are going to love it."},
-  {who:'card',text:'"A church dance, 1961. Joe spilled punch down my dress, turned bright red, and asked me to dance to make up for it. We were married fourteen months later."',meta:'How we met · Joe · 1961'}
-];
-function delay(ms){return new Promise(r=>setTimeout(r,ms));}
-function speak(text){return new Promise(resolve=>{if(!('speechSynthesis' in window)){resolve();return;}window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.rate=0.9;u.pitch=1.12;u.volume=0.9;const v=window.speechSynthesis.getVoices();const pref=v.find(x=>x.name.includes('Samantha'))||v.find(x=>x.name.includes('Karen'))||v.find(x=>x.name.includes('Victoria'))||v.find(x=>x.lang.startsWith('en')&&x.name.toLowerCase().includes('female'))||v.find(x=>x.lang.startsWith('en'))||null;if(pref)u.voice=pref;u.onend=()=>resolve();u.onerror=()=>resolve();window.speechSynthesis.speak(u);setTimeout(resolve,Math.min(text.length*70,9000));});}
+// Flask API base — empty means same origin (Flask serves this page)
+const DEMO_API='';
+
+let demoRecorder=null,demoState='idle';
+
 function scrollChat(){chat.scrollTop=chat.scrollHeight;}
 function addSpeaking(){const r=document.createElement('div');r.className='speaking-row';const hs=[14,22,18,26,20,16,12];for(let i=0;i<7;i++){const b=document.createElement('div');b.className='sbar';b.style.height=hs[i]+'px';b.style.animationDelay=(i*0.08)+'s';b.style.animationDuration=(0.5+Math.random()*0.3).toFixed(2)+'s';r.appendChild(b);}chat.appendChild(r);requestAnimationFrame(()=>{r.classList.add('show');scrollChat();});return r;}
-function addListening(){const r=document.createElement('div');r.className='listening-row';r.innerHTML='<span class="listening-label">listening</span><span class="dot"></span><span class="dot"></span><span class="dot"></span>';chat.appendChild(r);requestAnimationFrame(()=>{r.classList.add('show');scrollChat();});return r;}
 function addBubble(who,text){const b=document.createElement('div');b.className='msg '+(who==='ai'?'msg-ai':'msg-elder');b.textContent=text;chat.appendChild(b);requestAnimationFrame(()=>{b.classList.add('show');scrollChat();});return b;}
-function addCard(text,meta){const c=document.createElement('div');c.className='app-memory-card';c.innerHTML='<div class="amc-chip"><span class="d"></span>Memory saved</div><div class="amc-text">'+text+'</div><div class="amc-saved">\u2756 Added to Margaret\'s timeline</div>';chat.appendChild(c);requestAnimationFrame(()=>{c.classList.add('show');scrollChat();});return c;}
-async function startDemo(){if(demoRunning)return;demoRunning=true;micBtn.disabled=true;micLabel.textContent='Playing\u2026';chat.innerHTML='';stopMusic();
-  for(const t of script){
-    if(t.who==='ai'){statusEl.textContent='A Story is speaking\u2026';const sp=addSpeaking();const b=addBubble('ai','');const speakP=speak(t.text);let i=0;await new Promise(res=>{const iv=setInterval(()=>{b.textContent+=t.text[i++];scrollChat();if(i>=t.text.length){clearInterval(iv);res();}},32);});await speakP;sp.remove();await delay(350);}
-    else if(t.who==='elder'){statusEl.textContent='Margaret is talking\u2026';const li=addListening();await delay(1100);li.remove();const b=addBubble('elder','');let i=0;await new Promise(res=>{const iv=setInterval(()=>{b.textContent+=t.text[i++];scrollChat();if(i>=t.text.length){clearInterval(iv);res();}},26);});await delay(400);}
-    else{statusEl.textContent='Saving a memory\u2026';await delay(500);addCard(t.text,t.meta);await delay(600);}
+function addCard(title,summary){const c=document.createElement('div');c.className='app-memory-card';c.innerHTML='<div class="amc-chip"><span class="d"></span>Memory saved</div><div class="amc-text">'+summary+'</div><div class="amc-saved">❖ '+title+'</div>';chat.appendChild(c);requestAnimationFrame(()=>{c.classList.add('show');scrollChat();});return c;}
+function playAudio(b64){return new Promise(r=>{try{const a=new Audio('data:audio/mp3;base64,'+b64);a.onended=r;a.onerror=r;a.play().catch(r);}catch{r();}});}
+function showSummaryCards(raw){try{const stories=JSON.parse(raw);(Array.isArray(stories)?stories:[stories]).forEach(s=>{addCard(s.title||'Memory',s.summarization||'');});}catch{}}
+
+async function aiTurn(userMsg){
+  demoState='thinking';micBtn.disabled=true;
+  if(userMsg)addBubble('elder',userMsg);
+  statusEl.textContent='A Story is thinking…';
+  const sp=addSpeaking();
+  try{
+    const res=await fetch(DEMO_API+'/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:userMsg||'Hello'})});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const data=await res.json();
+    const reply=data.session_ended?data.closing_reply:data.reply;
+    addBubble('ai',reply);
+    if(data.audio||data.closing_audio){statusEl.textContent='A Story is speaking…';stopMusic();await playAudio(data.audio||data.closing_audio);resumeMusicIfWanted();}
+    sp.remove();
+    if(data.session_ended){
+      statusEl.textContent='Saving memories…';
+      if(data.summary)showSummaryCards(data.summary);
+      statusEl.textContent='Session complete';micLabel.textContent='Session ended';replayBtn.classList.add('show');demoState='done';return;
+    }
+    statusEl.textContent='Tap to speak';micLabel.textContent='Tap to speak';demoState='ready';micBtn.disabled=false;
+  }catch{
+    sp.remove();addBubble('ai','(Could not reach Flask — make sure the server is running.)');
+    statusEl.textContent='Error';micLabel.textContent='Tap to try again';demoState='idle';micBtn.disabled=false;
   }
-  statusEl.textContent='Memory saved to timeline';micLabel.textContent='That was one moment of many';replayBtn.classList.add('show');demoRunning=false;resumeMusicIfWanted();}
-function resetDemo(){if(demoRunning)return;window.speechSynthesis&&window.speechSynthesis.cancel();chat.innerHTML='';statusEl.textContent='Ready when you are';micBtn.disabled=false;micLabel.textContent='Tap to play the demo';replayBtn.classList.remove('show');startDemo();}
-if('speechSynthesis' in window){window.speechSynthesis.getVoices();window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();}
+}
+
+async function startDemo(){
+  if(demoState==='thinking'||demoState==='done')return;
+  if(demoState==='idle'){
+    chat.innerHTML='';micLabel.textContent='Connecting…';micBtn.disabled=true;stopMusic();
+    await fetch(DEMO_API+'/api/reset',{method:'POST'});
+    await aiTurn(null);return;
+  }
+  if(demoState==='recording'){
+    const{rec,stream}=demoRecorder;demoRecorder=null;stream.getTracks().forEach(t=>t.stop());
+    demoState='thinking';micBtn.disabled=true;micLabel.textContent='Transcribing…';
+    rec.stop();return;
+  }
+  if(demoState==='ready'){
+    let stream;
+    try{stream=await navigator.mediaDevices.getUserMedia({audio:true});}
+    catch{statusEl.textContent='Microphone access denied.';return;}
+    const chunks=[];
+    const rec=new MediaRecorder(stream);
+    rec.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
+    rec.onstop=async()=>{
+      const blob=new Blob(chunks,{type:rec.mimeType||'audio/webm'});
+      try{
+        const form=new FormData();form.append('audio',blob,'recording.webm');
+        const res=await fetch(DEMO_API+'/api/transcribe',{method:'POST',body:form});
+        const data=await res.json();
+        const text=(data.transcript??'').trim();
+        if(text)await aiTurn(text);
+        else{statusEl.textContent="Couldn't hear that.";micLabel.textContent='Tap to speak';demoState='ready';micBtn.disabled=false;}
+      }catch{statusEl.textContent='Transcription error.';micLabel.textContent='Tap to speak';demoState='ready';micBtn.disabled=false;}
+    };
+    rec.start();demoRecorder={rec,stream};demoState='recording';
+    statusEl.textContent='Recording…';micLabel.textContent='Tap to stop & send';
+  }
+}
+
+function resetDemo(){
+  if(demoRecorder){const{rec,stream}=demoRecorder;demoRecorder=null;stream.getTracks().forEach(t=>t.stop());rec.stop();}
+  chat.innerHTML='';demoRecorder=null;demoState='idle';
+  statusEl.textContent='Ready when you are';micBtn.disabled=false;micLabel.textContent='Tap to play the demo';
+  replayBtn.classList.remove('show');
+}
 
 /* unlock content gate on "Hear it in action" click */
 function unlockContent(){
