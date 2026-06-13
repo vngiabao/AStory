@@ -20,10 +20,134 @@ let route            = { name: "dashboard", params: {} };
 let session          = null;   // active interview session
 let storyDraft       = {};     // accumulates new-story answers
 let photoMemoryDraft = null;   // photos pending post creation
+let addMemoryPhotos  = [];    // staged in write-a-memory form
+let freeWritePhotos  = [];    // staged in free-write form
 
 const MONTHS = ["January","February","March","April","May","June",
   "July","August","September","October","November","December"];
 const DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
+
+const FREE_WEEKLY_LIMIT      = 5;
+const FREE_WEEKLY_PROMPTS    = 3;
+const FREE_WEEKLY_FREE_WRITE = 5;
+const FREE_WEEKLY_PHOTOS     = 5;
+
+function getWeeklyCardData() {
+  const key = `astory-weekly-${currentUser?.email || "anon"}`;
+  try {
+    const raw = localStorage.getItem(key);
+    const now = new Date();
+    const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay()).toDateString();
+    if (!raw) return { weekStart, count: 0 };
+    const data = JSON.parse(raw);
+    if (data.weekStart !== weekStart) return { weekStart, count: 0 };
+    return data;
+  } catch { return { weekStart: new Date().toDateString(), count: 0 }; }
+}
+
+function weeklyCardsLeft() {
+  return Math.max(0, FREE_WEEKLY_LIMIT - getWeeklyCardData().count);
+}
+
+function incrementWeeklyCards() {
+  const key = `astory-weekly-${currentUser?.email || "anon"}`;
+  const data = getWeeklyCardData();
+  data.count += 1;
+  localStorage.setItem(key, JSON.stringify(data));
+}
+
+function getWeeklyPromptData() {
+  const key = `astory-prompts-${currentUser?.email || "anon"}`;
+  try {
+    const raw = localStorage.getItem(key);
+    const now = new Date();
+    const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay()).toDateString();
+    if (!raw) return { weekStart, count: 0 };
+    const data = JSON.parse(raw);
+    if (data.weekStart !== weekStart) return { weekStart, count: 0 };
+    return data;
+  } catch { return { weekStart: new Date().toDateString(), count: 0 }; }
+}
+
+function weeklyPromptsLeft() {
+  return Math.max(0, FREE_WEEKLY_PROMPTS - getWeeklyPromptData().count);
+}
+
+function incrementWeeklyPrompts() {
+  const key = `astory-prompts-${currentUser?.email || "anon"}`;
+  const data = getWeeklyPromptData();
+  data.count += 1;
+  localStorage.setItem(key, JSON.stringify(data));
+}
+
+function getWeeklyFreeWriteData() {
+  const key = `astory-freewrite-${currentUser?.email || "anon"}`;
+  try {
+    const raw = localStorage.getItem(key);
+    const now = new Date();
+    const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay()).toDateString();
+    if (!raw) return { weekStart, count: 0 };
+    const data = JSON.parse(raw);
+    if (data.weekStart !== weekStart) return { weekStart, count: 0 };
+    return data;
+  } catch { return { weekStart: new Date().toDateString(), count: 0 }; }
+}
+
+function weeklyFreeWriteLeft() {
+  return Math.max(0, FREE_WEEKLY_FREE_WRITE - getWeeklyFreeWriteData().count);
+}
+
+function incrementWeeklyFreeWrite() {
+  const key = `astory-freewrite-${currentUser?.email || "anon"}`;
+  const data = getWeeklyFreeWriteData();
+  data.count += 1;
+  localStorage.setItem(key, JSON.stringify(data));
+}
+
+function getWeeklyPhotoData() {
+  const key = `astory-photos-${currentUser?.email || "anon"}`;
+  try {
+    const raw = localStorage.getItem(key);
+    const now = new Date();
+    const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay()).toDateString();
+    if (!raw) return { weekStart, count: 0 };
+    const data = JSON.parse(raw);
+    if (data.weekStart !== weekStart) return { weekStart, count: 0 };
+    return data;
+  } catch { return { weekStart: new Date().toDateString(), count: 0 }; }
+}
+
+function weeklyPhotosLeft() {
+  return Math.max(0, FREE_WEEKLY_PHOTOS - getWeeklyPhotoData().count);
+}
+
+function incrementWeeklyPhotos(count = 1) {
+  const key = `astory-photos-${currentUser?.email || "anon"}`;
+  const data = getWeeklyPhotoData();
+  data.count += count;
+  localStorage.setItem(key, JSON.stringify(data));
+}
+
+function updateStreak(story) {
+  const today     = new Date().toDateString();
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  const last      = story.lastMemoryDate || "";
+  if (last === today) return; // already counted today
+  story.streakDays    = last === yesterday ? (story.streakDays || 0) + 1 : 1;
+  story.lastMemoryDate = today;
+}
+
+const FREE_FOLLOWUPS = [
+  "Thank you for sharing that. Tell me more — what details or feelings stand out most?",
+  "Keep going — what else do you remember about this?",
+  "That's meaningful. What other details come to mind?",
+];
+
+const FREE_REFLECTIONS = [
+  "What a meaningful memory. Thank you for sharing it.",
+  "These details are exactly what families treasure. Thank you.",
+  "That's the kind of story that stays with people forever.",
+];
 
 const DEMO_VOICES = [
   "The wooden porch creaked every time it rained. I can still hear her calling us in.",
@@ -121,6 +245,64 @@ function storyById(id) { return state.stories.find(s => s.id === id) || null; }
 function fmtDob(day, month, year) {
   const parts = [day, month, year].filter(Boolean);
   return parts.length ? parts.join(" ") : "";
+}
+
+function showFirstSessionOnboarding(storyName, accent) {
+  const flagKey = `astory-onboarded-${currentUser?.email || "anon"}`;
+  if (localStorage.getItem(flagKey)) return;
+  localStorage.setItem(flagKey, "1");
+
+  const overlay = document.createElement("div");
+  overlay.id = "onboarding-overlay";
+  overlay.className = "ob-overlay";
+  overlay.innerHTML = `
+    <div class="ob-modal">
+      <div class="ob-slides" id="ob-slides">
+        <div class="ob-slide" data-slide="0">
+          <div class="ob-avatar" style="background:${accent}18;border:2px solid ${accent}50;color:${accent}">
+            ${(storyName||"?")[0].toUpperCase()}
+          </div>
+          <h2 class="ob-title">${h(storyName)}'s archive is ready.</h2>
+          <p class="ob-body">Every conversation you have becomes a memory card — preserved forever in their own voice.</p>
+        </div>
+        <div class="ob-slide" data-slide="1" style="display:none">
+          <div class="ob-icon-wrap" style="background:${accent}15;color:${accent}">${ICONS.mic}</div>
+          <h2 class="ob-title">Start with a conversation</h2>
+          <p class="ob-body">Tap <strong>Talk</strong> and answer a guided question. Your words become a keepsake memory card automatically.</p>
+          <p class="ob-note">${FREE_WEEKLY_LIMIT} free memory cards per week included.</p>
+        </div>
+        <div class="ob-slide" data-slide="2" style="display:none">
+          <div class="ob-icon-wrap" style="background:${accent}15;color:${accent}">${ICONS.book}</div>
+          <h2 class="ob-title">Watch their story grow</h2>
+          <p class="ob-body">Every memory lives in the <strong>Archive</strong>. One day it becomes a printed legacy book — a real keepsake to hold forever.</p>
+        </div>
+      </div>
+      <div class="ob-dots" id="ob-dots">
+        <span class="ob-dot is-active" data-dot="0"></span>
+        <span class="ob-dot" data-dot="1"></span>
+        <span class="ob-dot" data-dot="2"></span>
+      </div>
+      <button class="btn btn--primary ob-next" id="ob-next" style="background:${accent}">Next →</button>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  let cur = 0;
+  const slides = overlay.querySelectorAll(".ob-slide");
+  const dots   = overlay.querySelectorAll(".ob-dot");
+  const nextBtn = overlay.querySelector("#ob-next");
+
+  nextBtn.addEventListener("click", () => {
+    if (cur < slides.length - 1) {
+      slides[cur].style.display = "none";
+      dots[cur].classList.remove("is-active");
+      cur++;
+      slides[cur].style.display = "";
+      dots[cur].classList.add("is-active");
+      if (cur === slides.length - 1) nextBtn.textContent = "Let's go →";
+    } else {
+      overlay.remove();
+    }
+  });
 }
 
 function relLabel(story) {
@@ -355,26 +537,56 @@ function loginAs(email, firstName, lastName, isDemo, isNew = false) {
 }
 
 function showWelcomeVideo() {
-  app.innerHTML = `
-    <section class="welcome-video-screen">
-      <div class="auth-glow" aria-hidden="true"></div>
-      <div class="wv-inner">
-        <div class="wv-logo">
-          <span class="auth-mark-a">A</span><span class="auth-mark-word">Story</span>
+  const slides = [
+    {
+      icon: `<div class="wv-logo"><span class="auth-mark-a">A</span><span class="auth-mark-word">Story</span></div>`,
+      title: "Every life holds a story worth preserving.",
+      body:  "You've just taken the first step toward keeping someone's voice alive — for your family, forever.",
+    },
+    {
+      icon:  `<div class="wv-icon-wrap">${ICONS.mic}</div>`,
+      title: "A conversation that captures everything.",
+      body:  "Talk or type — A Story listens, asks thoughtful questions, and turns every answer into a memory card.",
+    },
+    {
+      icon:  `<div class="wv-icon-wrap">${ICONS.book}</div>`,
+      title: "One day, a book they can hold.",
+      body:  "Every memory you collect builds toward a beautiful hardcover — their voice, their stories, yours to keep forever.",
+    },
+  ];
+
+  let cur = 0;
+
+  function renderSlide() {
+    const s = slides[cur];
+    app.innerHTML = `
+      <section class="welcome-video-screen">
+        <div class="auth-glow" aria-hidden="true"></div>
+        <div class="wv-inner">
+          ${s.icon}
+          <h2 class="wv-slide-title">${s.title}</h2>
+          <p class="wv-slide-body">${s.body}</p>
+          <div class="wv-dots">
+            ${slides.map((_, i) => `<span class="wv-dot ${i === cur ? "is-active" : ""}"></span>`).join("")}
+          </div>
+          <button class="btn btn--primary btn--large btn--block" id="btn-wv-continue">
+            ${cur < slides.length - 1 ? "Next →" : "Get started →"}
+          </button>
+          ${cur < slides.length - 1
+            ? `<button class="auth-demo-link" id="btn-wv-skip">Skip →</button>`
+            : ""}
         </div>
-        <p class="wv-tagline">Preserving what matters most.</p>
-        <div class="wv-play-area">
-          <div class="wv-play-btn" aria-hidden="true">▶</div>
-          <p class="wv-play-label">Welcome video · 45 sec</p>
-          <p class="wv-play-sub">Coming soon — tap Continue to explore</p>
-        </div>
-        <button class="btn btn--primary btn--large" id="btn-wv-continue">
-          Continue →
-        </button>
-      </div>
-    </section>`;
-  document.getElementById("btn-wv-continue").onclick = showPricingGate;
-  setTimeout(() => { if (document.getElementById("btn-wv-continue")) showPricingGate(); }, 3500);
+      </section>`;
+    document.getElementById("btn-wv-continue").onclick = advance;
+    document.getElementById("btn-wv-skip")?.addEventListener("click", showPricingGate);
+  }
+
+  function advance() {
+    if (cur < slides.length - 1) { cur++; renderSlide(); }
+    else showPricingGate();
+  }
+
+  renderSlide();
 }
 
 /* Pricing gate shown to new users after sign-up — before they enter the app */
@@ -490,10 +702,14 @@ function parseRoute() {
 
   if (p0 === "story" && p1) {
     const p2base = p2 ? p2.split("?")[0] : "";
-    if      (p2base === "talk")   route = { name: "talk",   params: { storyId: p1 } };
-    else if (p2base === "tree")   route = { name: "tree",   params: { storyId: p1 } };
-    else if (p2base === "memory") route = { name: "memory", params: { storyId: p1, memId: p3 } };
-    else                          route = { name: "story",  params: { storyId: p1 } };
+    if      (p2base === "talk")        route = { name: "talk",        params: { storyId: p1 } };
+    else if (p2base === "tree")        route = { name: "tree",        params: { storyId: p1 } };
+    else if (p2base === "add-memory")  route = { name: "add-memory",  params: { storyId: p1 } };
+    else if (p2base === "free-write")  route = { name: "free-write",  params: { storyId: p1 } };
+    else if (p2base === "memory")      route = { name: "memory",      params: { storyId: p1, memId: p3 } };
+    else                               route = { name: "story",       params: { storyId: p1 } };
+  } else if (p0 === "share" && p1) {
+    route = { name: "share", params: { storyId: p1 } };
   } else {
     switch (p0) {
       case "new-story":    route = { name: "new-story",    params: {} }; break;
@@ -508,6 +724,7 @@ function parseRoute() {
       case "privacy":       route = { name: "privacy",       params: {} }; break;
       case "settings":      route = { name: "settings",      params: {} }; break;
       case "photo-memory":  route = { name: "photo-memory",  params: {} }; break;
+      case "tutorial":      route = { name: "tutorial",      params: {} }; break;
       default:             route = { name: "dashboard",     params: {} };
     }
   }
@@ -516,12 +733,15 @@ function parseRoute() {
 
 function navigate(name, params = {}) {
   const map = {
-    dashboard:  "#/",
-    "new-story":"#/new-story",
-    story:      `#/story/${params.storyId}`,
-    talk:       `#/story/${params.storyId}/talk`,
-    tree:       `#/story/${params.storyId}/tree`,
-    memory:     `#/story/${params.storyId}/memory/${params.memId}`,
+    dashboard:     "#/",
+    "new-story":   "#/new-story",
+    story:         `#/story/${params.storyId}`,
+    talk:          `#/story/${params.storyId}/talk`,
+    tree:          `#/story/${params.storyId}/tree`,
+    "add-memory":  `#/story/${params.storyId}/add-memory`,
+    "free-write":  `#/story/${params.storyId}/free-write`,
+    memory:        `#/story/${params.storyId}/memory/${params.memId}`,
+    share:         `#/share/${params.storyId}`,
     menu:          "#/menu",
     pricing:       "#/pricing",
     "legacy-book": "#/legacy-book",
@@ -532,29 +752,34 @@ function navigate(name, params = {}) {
     contact:       "#/contact",
     privacy:         "#/privacy",
     "photo-memory":  "#/photo-memory",
+    tutorial:        "#/tutorial",
   };
   location.hash = map[name] || "#/";
 }
 
 function render() {
   switch (route.name) {
-    case "new-story":  app.innerHTML = renderNewStory();                                break;
-    case "dashboard":  app.innerHTML = renderDashboard();                               break;
-    case "story":      app.innerHTML = renderStoryView(route.params.storyId);           break;
-    case "talk":       app.innerHTML = renderChat(route.params.storyId);                break;
-    case "tree":       app.innerHTML = renderTree(route.params.storyId);                break;
-    case "memory":     app.innerHTML = renderMemory(route.params.storyId, route.params.memId); break;
-    case "menu":       app.innerHTML = renderMenu();                                    break;
-    case "pricing":      app.innerHTML = renderPricing();                              break;
-    case "legacy-book":  app.innerHTML = renderLegacyBook();                           break;
-    case "invite":       app.innerHTML = renderInvite();                               break;
-    case "help":         app.innerHTML = renderHelp();                                 break;
-    case "faq":          app.innerHTML = renderFAQ();                                  break;
-    case "feedback":     app.innerHTML = renderFeedback();                             break;
-    case "contact":      app.innerHTML = renderContact();                              break;
-    case "privacy":      app.innerHTML = renderPrivacy();                              break;
-    case "settings":       app.innerHTML = renderSettings();                           break;
-    case "photo-memory":   app.innerHTML = renderPhotoMemory();                        break;
+    case "new-story":  app.innerHTML = renderNewStory();                                         break;
+    case "dashboard":  app.innerHTML = renderDashboard();                                        break;
+    case "story":      app.innerHTML = renderStoryView(route.params.storyId);                    break;
+    case "talk":       app.innerHTML = renderChat(route.params.storyId);                         break;
+    case "tree":       app.innerHTML = renderTree(route.params.storyId);                         break;
+    case "add-memory": app.innerHTML = renderAddMemory(route.params.storyId);                    break;
+    case "free-write": app.innerHTML = renderFreeWrite(route.params.storyId);                    break;
+    case "memory":     app.innerHTML = renderMemory(route.params.storyId, route.params.memId);   break;
+    case "share":      app.innerHTML = renderShareView(route.params.storyId);                    break;
+    case "menu":       app.innerHTML = renderMenu();                                             break;
+    case "pricing":      app.innerHTML = renderPricing();                                        break;
+    case "legacy-book":  app.innerHTML = renderLegacyBook();                                     break;
+    case "invite":       app.innerHTML = renderInvite();                                         break;
+    case "help":         app.innerHTML = renderHelp();                                           break;
+    case "faq":          app.innerHTML = renderFAQ();                                            break;
+    case "feedback":     app.innerHTML = renderFeedback();                                       break;
+    case "contact":      app.innerHTML = renderContact();                                        break;
+    case "privacy":      app.innerHTML = renderPrivacy();                                        break;
+    case "settings":       app.innerHTML = renderSettings();                                     break;
+    case "photo-memory":   app.innerHTML = renderPhotoMemory();                                  break;
+    case "tutorial":       app.innerHTML = renderTutorial();                                      break;
     default:             app.innerHTML = renderDashboard();
   }
   bindEvents();
@@ -801,16 +1026,16 @@ function renderDashboard() {
       <header class="dash-header">
         <div class="dash-story-sel">
           <div class="dash-story-avatar" style="background:${accent}18;border:1.5px solid ${accent}50;color:${accent}">
-            ${(story.name||"?")[0].toUpperCase()}
+            ${story.photo ? `<img src="${story.photo}" class="story-avatar-img" alt="${h(story.name)}" />` : (story.name||"?")[0].toUpperCase()}
           </div>
           <div>
-            <p class="home-greeting">${greeting()}, ${h(currentUser?.firstName || "")}</p>
+            <p class="home-greeting">${greeting()}, ${h(currentUser?.firstName || "")}${(story.streakDays || 0) >= 2 ? ` <span class="streak-badge">🔥 ${story.streakDays}</span>` : ""}</p>
             <button class="dash-story-name-btn" id="btn-switch-story">
               ${h(story.name)} <span class="dash-story-chevron">▾</span>
             </button>
           </div>
         </div>
-        <a href="#/new-story" class="icon-btn">+ Add</a>
+        <a href="#/new-story" class="icon-btn">+ Person</a>
       </header>
 
       <!-- Story switcher dropdown -->
@@ -868,43 +1093,43 @@ function renderDashboard() {
             </a>`).join("")}
         </div>` : ""}
 
-      <!-- Keepsake book teaser -->
-      <div class="keepsake-section">
-        <p class="keepsake-eyebrow">A LASTING LEGACY</p>
-        <h3 class="keepsake-heading">Their <em>keepsake</em></h3>
-        <p class="keepsake-sub">Every answer is kept privately, in their own voice. One day, it becomes a book you can hold.</p>
-        <div class="keepsake-book-wrap">
-          <div class="keepsake-book">
-            <div class="book-spine"></div>
-            <div class="book-app-icon">A</div>
-            <p class="book-serif-a">A</p>
-            <p class="book-legend">A LIFE, IN THEIR WORDS</p>
+      <!-- Progress by chapter -->
+      ${(() => {
+        const eraCounts = ERAS.map(era => ({ era, count: story.memories.filter(m => m.era === era && m.status !== "in_progress").length }));
+        const maxCount  = Math.max(...eraCounts.map(e => e.count), 1);
+        const hasAny    = eraCounts.some(e => e.count > 0);
+        return `
+        <div class="progress-section">
+          <div class="section-head">
+            <h3>Story chapters</h3>
+            <a href="#/story/${story.id}/tree" class="link-sm">Archive</a>
           </div>
-        </div>
-        <div class="keepsake-stats">
-          <div class="ks-stat">
-            <span class="ks-num">${story.memories.length}</span>
-            <span class="ks-label">MEMORIES</span>
-          </div>
-          <div class="ks-stat">
-            <span class="ks-num">100%</span>
-            <span class="ks-label">PRIVATE</span>
-          </div>
-          <div class="ks-stat">
-            <span class="ks-num">∞</span>
-            <span class="ks-label">KEPT FOREVER</span>
-          </div>
-        </div>
-        <a href="#/legacy-book" class="btn btn--secondary btn--block ks-cta">
-          Get ${h(story.name)}'s legacy book
-        </a>
-      </div>
+          ${hasAny ? `
+          <div class="progress-chapters">
+            ${eraCounts.map(({ era, count }) => `
+              <div class="progress-chapter">
+                <div class="pc-label-row">
+                  <span class="pc-era">${h(era)}</span>
+                  <span class="pc-count" style="color:${count > 0 ? accent : "var(--text-muted)"}">${count}</span>
+                </div>
+                <div class="pc-bar-bg">
+                  <div class="pc-bar-fill" style="width:${Math.round((count/maxCount)*100)}%;background:${accent}"></div>
+                </div>
+              </div>`).join("")}
+          </div>` : `
+          <p class="progress-empty">Start talking — each conversation fills a chapter.</p>`}
+        </div>`;
+      })()}
 
       <!-- Actions -->
       <div class="dash-actions">
         <a href="#/invite" class="dash-action-btn" style="text-decoration:none">
           <span class="menu-icon">${ICONS.people}</span> Invite family members
         </a>
+        ${story.memories.length >= 3 ? `
+        <a href="#/legacy-book" class="dash-action-btn" style="text-decoration:none">
+          <span class="menu-icon">${ICONS.book}</span> Order ${h(story.name)}'s legacy book
+        </a>` : ""}
       </div>
     </section>
     ${tabs("home", story.id)}`;
@@ -922,46 +1147,107 @@ function renderStoryView(storyId) {
 }
 
 /* ═══════════════════════════════════════════
+   PROMPT CHOICE SCREEN
+═══════════════════════════════════════════ */
+function renderPromptChoice(storyId, story) {
+  const accent = storyAccent(story);
+  const pcAvatarHtml = story.photo
+    ? `<img src="${story.photo}" class="story-avatar-img" alt="${h(story.name)}" />`
+    : (story.name || "?")[0].toUpperCase();
+  return `
+    <section class="view prompt-choice-view">
+      <header class="chat-header">
+        <button class="chat-back" id="chat-back-choice">←</button>
+        <div class="chat-avatar-sm" style="background:${accent}18;border:1.5px solid ${accent}60;color:${accent}">
+          ${pcAvatarHtml}
+        </div>
+        <div class="chat-identity">
+          <p class="chat-ai-name">${h(story.name)}</p>
+          <p class="chat-era-label" style="color:${accent}">New memory</p>
+        </div>
+        <div class="chat-header-spacer"></div>
+      </header>
+      <div class="pc-body">
+        <p class="pc-eyebrow">START A CONVERSATION</p>
+        <h2 class="pc-title">How would you like to share?</h2>
+        <p class="pc-sub">A guided question helps spark specific memories. Or write freely in your own words.</p>
+        <div class="pc-options">
+          <button class="pc-option" id="btn-pc-prompt" data-story-id="${storyId}">
+            <div class="pc-option-icon" style="background:${accent}15;color:${accent}">${ICONS.chat}</div>
+            <div class="pc-option-text">
+              <p class="pc-option-label">Use a guided question</p>
+              <p class="pc-option-sub">A prompt to spark a specific memory</p>
+            </div>
+            <span class="pc-arrow">›</span>
+          </button>
+          <button class="pc-option" id="btn-pc-free" data-story-id="${storyId}">
+            <div class="pc-option-icon" style="background:var(--accent-soft);color:var(--accent)">${ICONS.add}</div>
+            <div class="pc-option-text">
+              <p class="pc-option-label">Write freely</p>
+              <p class="pc-option-sub">Share whatever comes to mind</p>
+            </div>
+            <span class="pc-arrow">›</span>
+          </button>
+        </div>
+      </div>
+    </section>`;
+}
+
+/* ═══════════════════════════════════════════
    CHAT / TALK
 ═══════════════════════════════════════════ */
 function renderChat(storyId) {
   const story = storyById(storyId);
   if (!story) { navigate("dashboard"); return ""; }
 
-  // If session is in "card" phase, render memory card instead
   if (session?.phase === "card") return renderMemoryCardUI(story);
 
   const firstP   = isOwn(story);
-  const prompts  = getPrompts(firstP, story.name);
   const urlEra   = new URLSearchParams(location.hash.includes("?") ? location.hash.split("?")[1] : "").get("era");
-  let prompt;
-  if (urlEra) {
-    const m = prompts.filter(p => p.era === urlEra);
-    prompt  = m.length ? m[Math.floor(Math.random()*m.length)] : prompts[story.sessionsCompleted % prompts.length];
-  } else {
-    prompt = prompts[story.sessionsCompleted % prompts.length];
-  }
 
-  if (session && (session.storyId !== storyId || (urlEra && session.prompt.era !== urlEra))) {
+  // Clear stale session for a different story or era
+  if (session && (session.storyId !== storyId || (urlEra && session.prompt?.era !== urlEra))) {
     session = null;
   }
+
+  // No session yet — auto-start with a guided prompt (choice screen removed from Talk)
   if (!session) {
-    session = { storyId, prompt, firstPerson: firstP, personName: story.name, phase: "first", answers: [], selectedEra: urlEra || null, period: "", privacy: "shared" };
+    if (weeklyPromptsLeft() === 0) {
+      showWeeklyPromptLimitModal();
+      navigate("tree", { storyId });
+      return "";
+    }
+    const prompts = getPrompts(firstP, story.name);
+    let prompt;
+    if (urlEra) {
+      const candidates = prompts.filter(p => p.era === urlEra);
+      prompt = candidates.length
+        ? candidates[Math.floor(Math.random()*candidates.length)]
+        : prompts[story.sessionsCompleted % prompts.length];
+    } else {
+      prompt = prompts[story.sessionsCompleted % prompts.length];
+    }
+    incrementWeeklyPrompts();
+    session = { storyId, prompt, firstPerson: firstP, personName: story.name, phase: "first", answers: [], selectedEra: urlEra || null, period: "", privacy: "shared", isFree: false };
   }
 
-  const accent = storyAccent(story);
+  const accent  = storyAccent(story);
+  const eraLabel = session.prompt?.era || "Life";
+  const chatAvatarHtml = story.photo
+    ? `<img src="${story.photo}" class="story-avatar-img" alt="${h(story.name)}" />`
+    : (story.name || "?")[0].toUpperCase();
   return `
     <section class="view view--chat" id="chat-view">
       <header class="chat-header">
         <button class="chat-back" id="chat-back">←</button>
         <div class="chat-avatar-sm" style="background:${accent}18;border:1.5px solid ${accent}60;color:${accent}">
-          ${(story.name||"?")[0].toUpperCase()}
+          ${chatAvatarHtml}
         </div>
         <div class="chat-identity">
           <p class="chat-ai-name">${h(story.name)}</p>
-          <p class="chat-era-label" style="color:${accent}">${h(session.prompt.era)}</p>
+          <p class="chat-era-label" style="color:${accent}">${h(eraLabel)}</p>
         </div>
-        <div class="chat-header-spacer"></div>
+        <button class="btn-chat-save" id="btn-chat-save" disabled style="--save-accent:${accent}" title="Save as memory card">✦ Save</button>
       </header>
       <div class="chat-messages" id="chat-messages"></div>
       <footer class="chat-footer">
@@ -983,7 +1269,7 @@ function renderMemoryCardUI(story) {
       <header class="chat-header">
         <button class="chat-back" id="mc-back">←</button>
         <div class="chat-identity">
-          <p class="chat-ai-name">Memory Card</p>
+          <p class="chat-ai-name">Review your memory</p>
           <p class="chat-era-label" style="color:${accent}">${h(draft.era)}</p>
         </div>
         <div class="chat-header-spacer"></div>
@@ -991,23 +1277,17 @@ function renderMemoryCardUI(story) {
 
       <div class="mc-content">
         <div class="mc-card-preview">
-          <span class="memory-card-era" style="color:${accent}">${h(draft.era)}</span>
-          ${session.period ? `<p class="mc-period">${h(session.period)}</p>` : ""}
-          <h3 class="mc-title" id="mc-title-el">${h(draft.title)}</h3>
-          <p class="mc-excerpt">${h(draft.excerpt)}</p>
-        </div>
-
-        <div class="mc-rating-section">
-          <p class="mc-rating-label">How satisfied are you with this memory card?</p>
-          <p class="mc-rating-sub">The more details and feelings captured, the more your family will treasure it.</p>
-          <div class="star-rating" id="star-rating" role="group" aria-label="Rate this memory">
-            ${[1,2,3,4,5].map(n => `
-              <button type="button" class="star-btn ${(session.rating||0) >= n ? "is-active":""}"
-                data-star="${n}" aria-label="${n} star${n>1?"s":""}">${(session.rating||0) >= n ? "★" : "☆"}</button>
-            `).join("")}
+          <div class="mc-era-row">
+            <select class="mc-era-select" id="mc-era-select" style="color:${accent}">
+              ${ERAS.map(e => `<option value="${h(e)}" ${draft.era === e ? "selected" : ""}>${h(e)}</option>`).join("")}
+            </select>
           </div>
-          <textarea class="mc-note-input" id="mc-note" rows="2"
-            placeholder="Why? (optional)">${h(session.ratingNote||"")}</textarea>
+          ${session.period ? `<p class="mc-period">${h(session.period)}</p>` : ""}
+          <p class="mc-edit-hint">Tap to edit</p>
+          <input type="text" class="mc-title-edit" id="mc-title-edit"
+            value="${h(draft.title)}" placeholder="Memory title…" maxlength="100" />
+          <textarea class="mc-body-edit" id="mc-body-edit" rows="5"
+            placeholder="The memory…">${h(draft.body)}</textarea>
         </div>
 
         <div class="mc-media-section">
@@ -1039,6 +1319,145 @@ function renderMemoryCardUI(story) {
       <div class="mc-footer">
         <button type="button" class="btn btn--primary btn--block" id="btn-save-card"
           style="background:${accent}">Save to archive →</button>
+      </div>
+    </section>`;
+}
+
+/* ═══════════════════════════════════════════
+   MANUAL ADD MEMORY
+═══════════════════════════════════════════ */
+function renderAddMemory(storyId) {
+  const story = storyById(storyId);
+  if (!story) { navigate("dashboard"); return ""; }
+  const accent     = storyAccent(story);
+  const photosLeft = weeklyPhotosLeft();
+  addMemoryPhotos  = [];
+  return `
+    <section class="view add-memory-view">
+      <header class="chat-header">
+        <a href="#/story/${storyId}/tree" class="chat-back">←</a>
+        <div class="chat-identity">
+          <p class="chat-ai-name">Write a memory</p>
+          <p class="chat-era-label" style="color:${accent}">${h(story.name)}</p>
+        </div>
+        <div class="chat-header-spacer"></div>
+      </header>
+      <div class="add-memory-body">
+        <p class="add-memory-hint">Write in ${h(story.name)}'s voice, or your own — there's no wrong way.</p>
+        <form class="form-stack" id="add-memory-form" data-story-id="${storyId}">
+          <label class="field">
+            <span>The memory</span>
+            <textarea name="body" rows="7"
+              placeholder="Describe the memory — what happened, how it felt, what you remember most…"
+              class="add-memory-textarea" required></textarea>
+          </label>
+          <label class="field">
+            <span>Title <span class="field-optional">(optional)</span></span>
+            <input type="text" name="title" placeholder="e.g. The summer in Vermont" maxlength="80" />
+          </label>
+          <label class="field">
+            <span>Chapter</span>
+            <select name="era">
+              ${ERAS.map(e => `<option value="${h(e)}">${h(e)}</option>`).join("")}
+            </select>
+          </label>
+          <label class="field">
+            <span>Time period <span class="field-optional">(optional)</span></span>
+            <input type="text" name="period" placeholder="e.g. June 1975, mid-30s, or Jun 15 1975" maxlength="60" />
+          </label>
+          <div class="fw-photo-section">
+            <div class="fw-photo-header">
+              <span class="fw-photo-label">Photos <span class="field-optional">(optional)</span></span>
+              <span class="photo-limit-badge ${photosLeft === 0 ? "is-empty" : ""}">${photosLeft > 0 ? `${photosLeft} left this week` : "Limit reached"}</span>
+            </div>
+            <input type="file" id="add-memory-photo-input" accept="image/*" multiple style="display:none" />
+            <div class="photo-preview-grid" id="add-memory-photo-grid"></div>
+            ${photosLeft > 0
+              ? `<button type="button" class="btn-add-photo" id="btn-add-memory-photo" style="border-color:${accent}40;color:${accent}">+ Add photos</button>`
+              : `<p class="photo-limit-msg">Photo limit reached — resets Monday.</p>`}
+          </div>
+          <button type="submit" class="btn btn--primary btn--large btn--block" style="background:${accent}">
+            Save to archive →
+          </button>
+        </form>
+      </div>
+    </section>
+    ${tabs("tree", storyId)}`;
+}
+
+/* ═══════════════════════════════════════════
+   FREE WRITE SCREEN
+═══════════════════════════════════════════ */
+function renderFreeWrite(storyId) {
+  const story = storyById(storyId);
+  if (!story) { navigate("dashboard"); return ""; }
+  const accent    = storyAccent(story);
+  const photosLeft = weeklyPhotosLeft();
+  const firstP    = isOwn(story);
+  const prompts   = getPrompts(firstP, story.name);
+  const insPrompt = prompts[Math.floor(Math.random() * prompts.length)];
+  freeWritePhotos = [];
+
+  const avatarHtml = story.photo
+    ? `<img src="${story.photo}" class="story-avatar-img" alt="${h(story.name)}" />`
+    : (story.name || "?")[0].toUpperCase();
+
+  return `
+    <section class="view free-write-view">
+      <header class="chat-header">
+        <button class="chat-back" id="fw-back">←</button>
+        <div class="chat-avatar-sm" style="background:${accent}18;border:1.5px solid ${accent}60;color:${accent}">
+          ${avatarHtml}
+        </div>
+        <div class="chat-identity">
+          <p class="chat-ai-name">Write freely</p>
+          <p class="chat-era-label" style="color:${accent}">${h(story.name)}</p>
+        </div>
+        <div class="chat-header-spacer"></div>
+      </header>
+      <div class="fw-body">
+        <details class="fw-prompt-box">
+          <summary class="fw-prompt-toggle">
+            <span class="fw-prompt-spark">✦</span> Need a spark? Tap for a prompt
+          </summary>
+          <p class="fw-prompt-question">${h(insPrompt.question)}</p>
+        </details>
+        <form class="form-stack fw-form" id="fw-form" data-story-id="${storyId}">
+          <label class="field">
+            <span>Your memory</span>
+            <textarea name="body" rows="8"
+              placeholder="Write whatever comes to mind — a moment, a feeling, a story from their life…"
+              class="fw-textarea" required></textarea>
+          </label>
+          <label class="field">
+            <span>Title <span class="field-optional">(optional)</span></span>
+            <input type="text" name="title" placeholder="e.g. The summer we moved north" maxlength="80" />
+          </label>
+          <label class="field">
+            <span>Chapter</span>
+            <select name="era">
+              ${ERAS.map(e => `<option value="${h(e)}">${h(e)}</option>`).join("")}
+            </select>
+          </label>
+          <label class="field">
+            <span>Time period <span class="field-optional">(optional)</span></span>
+            <input type="text" name="period" placeholder="e.g. June 1975, mid-30s, or Jun 15 1975" maxlength="60" />
+          </label>
+          <div class="fw-photo-section">
+            <div class="fw-photo-header">
+              <span class="fw-photo-label">Photos <span class="field-optional">(optional)</span></span>
+              <span class="photo-limit-badge ${photosLeft === 0 ? "is-empty" : ""}">${photosLeft > 0 ? `${photosLeft} left this week` : "Limit reached"}</span>
+            </div>
+            <input type="file" id="fw-photo-input" accept="image/*" multiple style="display:none" />
+            <div class="photo-preview-grid" id="fw-photo-grid"></div>
+            ${photosLeft > 0
+              ? `<button type="button" class="btn-add-photo" id="btn-fw-photo" style="border-color:${accent}40;color:${accent}">+ Add photos</button>`
+              : `<p class="photo-limit-msg">Photo limit reached — resets Monday.</p>`}
+          </div>
+          <button type="submit" class="btn btn--primary btn--large btn--block" style="background:${accent}">
+            Save as memory card →
+          </button>
+        </form>
       </div>
     </section>`;
 }
@@ -1102,6 +1521,15 @@ function renderTree(storyId) {
         <h2 class="view-title">Archive</h2>
       </header>
 
+      <div class="archive-actions-row">
+        <a href="#/story/${storyId}/talk" class="archive-action-btn archive-action-btn--talk" style="border-color:${accent}40;color:${accent}">
+          <span>${ICONS.mic}</span> Start a conversation
+        </a>
+        <a href="#/story/${storyId}/free-write" class="archive-action-btn archive-action-btn--write" style="border-color:var(--border-mid)">
+          <span>${ICONS.add}</span> Write a memory
+        </a>
+      </div>
+
       ${allMemories.length ? `
       <div class="tree-search-wrap">
         <span class="tree-search-icon">${ICONS.search}</span>
@@ -1118,21 +1546,31 @@ function renderTree(storyId) {
               <ul>
                 ${g.items.map(m => `
                   <li data-mem-search="${h((m.title + " " + m.body + " " + (m.period||"")).toLowerCase())}">
-                    <a href="#/story/${storyId}/memory/${m.id}" class="timeline-item">
-                      <div>
+                    <a href="#/story/${storyId}/memory/${m.id}" class="timeline-item ${m.status === "in_progress" ? "timeline-item--locked" : ""}">
+                      ${m.photos?.length ? `<img src="${m.photos[0]}" class="tl-photo-thumb" alt="" />` : ""}
+                      <div class="tl-text">
                         <strong>${h(m.title)}</strong>
+                        ${m.status === "in_progress" ? `<span class="tl-locked-badge">In progress</span>` : ""}
                         ${m.period ? `<span class="tl-period">${h(m.period)}</span>` : ""}
                       </div>
-                      <span>${fmtDate(m.createdAt)}</span>
+                      <span class="tl-date">${m.status === "in_progress" ? "🔒" : fmtDate(m.createdAt)}</span>
                     </a>
                   </li>`).join("")}
               </ul>
             </li>`).join("")}
         </ol>` : `
-        <div class="empty-state">
-          <p>No memories yet.<br>Start talking to grow ${h(story.name)}'s tree.</p>
-          <a href="#/story/${storyId}/talk" class="btn btn--primary"
-            style="margin-top:1.5rem;display:inline-flex;background:${accent}">Start talking</a>
+        <div class="empty-state-archive">
+          <div class="esa-icon" style="color:${accent}">${ICONS.tree}</div>
+          <h3 class="esa-title">No memories yet</h3>
+          <p class="esa-body">Every conversation becomes a memory ${h(story.name)}'s family can hold forever.</p>
+          <div class="esa-actions">
+            <a href="#/story/${storyId}/talk" class="btn btn--primary" style="background:${accent}">
+              Start a conversation
+            </a>
+            <a href="#/story/${storyId}/free-write" class="btn btn--ghost">
+              Write freely
+            </a>
+          </div>
         </div>`}
       </div>
       <p class="tree-no-results" id="tree-no-results" style="display:none">No memories match your search.</p>
@@ -1491,9 +1929,11 @@ function renderPrivacy() {
    LEGACY BOOK ORDER
 ═══════════════════════════════════════════ */
 function renderLegacyBook() {
-  const story  = activeStory();
-  const accent = story ? storyAccent(story) : "#d4a574";
-  const name   = story ? h(story.name) : "your loved one";
+  const story    = activeStory();
+  const accent   = story ? storyAccent(story) : "#d4a574";
+  const name     = story ? h(story.name) : "your loved one";
+  const memories = story?.memories.filter(m => m.status !== "in_progress") || [];
+  const preview  = memories.slice(0, 3);
 
   return `
     <section class="view lb-view">
@@ -1519,7 +1959,52 @@ function renderLegacyBook() {
         </div>
       </div>
 
-      <form class="form-stack" id="lb-form">
+      ${memories.length > 0 ? `
+      <!-- Book preview -->
+      <div class="lb-preview-section">
+        <p class="lb-preview-label">PREVIEW · ${memories.length} ${memories.length === 1 ? "MEMORY" : "MEMORIES"} COLLECTED</p>
+        <div class="lb-preview-stack">
+          <div class="lb-preview-cover" style="--lb-accent:${accent}">
+            <div class="lb-preview-cover-top">
+              <span class="lb-preview-brand">A</span>
+            </div>
+            <div class="lb-preview-cover-title">
+              <p class="lb-preview-name">${name}</p>
+              <p class="lb-preview-subtitle">A Life, In Their Words</p>
+            </div>
+          </div>
+          <div class="lb-preview-pages">
+            ${preview.map((m, i) => `
+              <div class="lb-preview-page" style="--pg-offset:${i * 3}px">
+                <p class="lb-preview-era" style="color:${accent}">${h(m.era)}</p>
+                <h4 class="lb-preview-mem-title">${h(m.title)}</h4>
+                <p class="lb-preview-mem-body">${h(m.body.slice(0, 160))}${m.body.length > 160 ? "…" : ""}</p>
+              </div>`).join("")}
+            ${memories.length > 3 ? `
+              <div class="lb-preview-more">
+                +${memories.length - 3} more ${memories.length - 3 === 1 ? "memory" : "memories"} inside
+              </div>` : ""}
+          </div>
+        </div>
+      </div>
+
+      <div class="lb-order-divider">
+        <span>Ready to print?</span>
+      </div>
+
+      <form class="form-stack" id="lb-form">` : `
+      <div class="lb-empty-prompt">
+        <p class="lb-empty-text">Add memories first to see your book preview.</p>
+        <a href="#/story/${story?.id}/talk" class="btn btn--primary btn--block" style="background:${accent};margin-top:1rem">
+          Start a conversation →
+        </a>
+      </div>
+
+      <div class="lb-order-divider" style="margin-top:2rem">
+        <span>Pre-order your book</span>
+      </div>
+
+      <form class="form-stack" id="lb-form">`}
         <label class="field">
           <span>Recipient name</span>
           <input type="text" name="fullName" placeholder="Full name" autocomplete="name" />
@@ -1567,9 +2052,8 @@ function renderInvite() {
   const story  = activeStory();
   const accent = story ? storyAccent(story) : "#d4a574";
   const storyName = story ? h(story.name) : "the story";
-  // Deterministic fake link based on story id
-  const code  = (story?.id || "family").replace(/-/g, "").slice(0, 8).toUpperCase();
-  const link  = `https://astory.app/join/${code}`;
+  const shareLink = story ? `${location.origin}${location.pathname}#/share/${story.id}` : "";
+  const link  = shareLink;
 
   return `
     <section class="view invite-view">
@@ -1621,6 +2105,76 @@ function renderInvite() {
 }
 
 /* ═══════════════════════════════════════════
+   FAMILY SHARE VIEW (read-only)
+═══════════════════════════════════════════ */
+function renderShareView(storyId) {
+  const story = storyById(storyId);
+  if (!story) {
+    return `
+      <section class="view share-view">
+        <header class="share-header">
+          <div class="share-branding"><span class="share-brand-a">A</span><span class="share-brand-word">Story</span></div>
+        </header>
+        <div class="share-not-found">
+          <p>This archive is no longer available.</p>
+          <a href="#/" class="btn btn--primary" style="margin-top:1.5rem">Open A Story</a>
+        </div>
+      </section>`;
+  }
+
+  const accent   = storyAccent(story);
+  const visible  = story.memories.filter(m => m.privacy !== "private" && m.status !== "in_progress");
+  const grouped  = ERAS.map(era => ({
+    era, items: visible.filter(m => m.era === era),
+  })).filter(g => g.items.length);
+  const other = visible.filter(m => !ERAS.includes(m.era));
+  if (other.length) grouped.push({ era: "Life", items: other });
+
+  return `
+    <section class="view share-view">
+      <header class="share-header">
+        <div class="share-branding"><span class="share-brand-a">A</span><span class="share-brand-word">Story</span></div>
+        <p class="share-shared-by">Shared by ${h(currentUser?.firstName || "a family member")}</p>
+      </header>
+
+      <div class="share-hero">
+        <div class="share-avatar" style="background:${accent}18;border:2px solid ${accent}50;color:${accent}">
+          ${(story.name||"?")[0].toUpperCase()}
+        </div>
+        <h1 class="share-name">${h(story.name)}'s Story</h1>
+        <p class="share-sub">${visible.length} ${visible.length === 1 ? "memory" : "memories"} preserved</p>
+      </div>
+
+      ${grouped.length ? `
+        <div class="share-memories">
+          ${grouped.map(g => `
+            <div class="share-era-section">
+              <h3 class="share-era-title" style="color:${accent}">${h(g.era)}</h3>
+              ${g.items.map(m => `
+                <div class="share-memory-card">
+                  <h4 class="share-mc-title">${h(m.title)}</h4>
+                  ${m.period ? `<p class="share-mc-period">${h(m.period)}</p>` : ""}
+                  <p class="share-mc-body">${h(m.body)}</p>
+                  <time class="share-mc-date">${fmtDate(m.createdAt)}</time>
+                </div>`).join("")}
+            </div>`).join("")}
+        </div>` : `
+        <div class="share-empty">
+          <p>No shared memories yet.</p>
+        </div>`}
+
+      <div class="share-footer">
+        <p class="share-footer-eyebrow">PRESERVED WITH</p>
+        <div class="share-footer-brand"><span class="share-brand-a">A</span><span class="share-brand-word">Story</span></div>
+        <p class="share-footer-sub">Every family has a story worth preserving.</p>
+        <a href="#/" class="btn btn--primary share-footer-cta" style="background:${accent}">
+          Start your own archive →
+        </a>
+      </div>
+    </section>`;
+}
+
+/* ═══════════════════════════════════════════
    COMING SOON MODAL (global so inline onclick works)
 ═══════════════════════════════════════════ */
 window.showPrivacy = function() {
@@ -1660,6 +2214,105 @@ function showNotificationPrompt() {
       Notification.requestPermission();
     }
   });
+}
+
+function showSaveToast(storyName) {
+  document.getElementById("save-toast")?.remove();
+  const el = document.createElement("div");
+  el.id = "save-toast";
+  el.className = "save-toast";
+  el.textContent = `✦ Memory saved to ${storyName}'s archive`;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add("is-visible"));
+  setTimeout(() => {
+    el.classList.remove("is-visible");
+    setTimeout(() => el.remove(), 400);
+  }, 2400);
+}
+
+function showWeeklyPromptLimitModal() {
+  document.getElementById("cs-modal")?.remove();
+  const accent = activeStory() ? storyAccent(activeStory()) : "#d4a574";
+  const el = document.createElement("div");
+  el.id = "cs-modal"; el.className = "cs-overlay";
+  el.innerHTML = `
+    <div class="cs-modal weekly-limit-modal" role="dialog" aria-modal="true">
+      <p class="cs-icon">💬</p>
+      <h3 class="cs-title">Prompt limit reached</h3>
+      <p class="cs-body">Free accounts include ${FREE_WEEKLY_PROMPTS} guided prompts per week — yours reset next Monday.</p>
+      <p class="cs-body" style="margin-top:.5rem">You can still <strong>write freely</strong> anytime, or upgrade for unlimited prompts.</p>
+      <a href="#/pricing" class="btn btn--primary" style="background:${accent};margin-bottom:.5rem" onclick="document.getElementById('cs-modal').remove()">
+        See plans →
+      </a>
+      <button class="btn btn--ghost" onclick="document.getElementById('cs-modal').remove()">
+        Write freely instead
+      </button>
+    </div>`;
+  document.body.appendChild(el);
+  el.onclick = (e) => { if (e.target === el) el.remove(); };
+}
+
+function showWeeklyFreeWriteLimitModal(storyId) {
+  document.getElementById("cs-modal")?.remove();
+  const story  = storyById(storyId);
+  const accent = story ? storyAccent(story) : "#d4a574";
+  const el = document.createElement("div");
+  el.id = "cs-modal"; el.className = "cs-overlay";
+  el.innerHTML = `
+    <div class="cs-modal weekly-limit-modal" role="dialog" aria-modal="true">
+      <p class="cs-icon">✍️</p>
+      <h3 class="cs-title">Free write limit reached</h3>
+      <p class="cs-body">Free accounts include ${FREE_WEEKLY_FREE_WRITE} free writes per week — yours reset next Monday.</p>
+      <p class="cs-body" style="margin-top:.5rem">Upgrade for unlimited writing, or use a <strong>guided prompt</strong> instead.</p>
+      <a href="#/pricing" class="btn btn--primary" style="background:${accent};margin-bottom:.5rem" onclick="document.getElementById('cs-modal').remove()">
+        See plans →
+      </a>
+      <button class="btn btn--ghost" onclick="document.getElementById('cs-modal').remove()">Close</button>
+    </div>`;
+  document.body.appendChild(el);
+  el.onclick = (e) => { if (e.target === el) el.remove(); };
+}
+
+function showWeeklyPhotoLimitModal() {
+  document.getElementById("cs-modal")?.remove();
+  const accent = activeStory() ? storyAccent(activeStory()) : "#d4a574";
+  const el = document.createElement("div");
+  el.id = "cs-modal"; el.className = "cs-overlay";
+  el.innerHTML = `
+    <div class="cs-modal weekly-limit-modal" role="dialog" aria-modal="true">
+      <p class="cs-icon">📷</p>
+      <h3 class="cs-title">Photo limit reached</h3>
+      <p class="cs-body">Free accounts include ${FREE_WEEKLY_PHOTOS} photo uploads per week — yours reset next Monday.</p>
+      <a href="#/pricing" class="btn btn--primary" style="background:${accent};margin-bottom:.5rem" onclick="document.getElementById('cs-modal').remove()">
+        See plans →
+      </a>
+      <button class="btn btn--ghost" onclick="document.getElementById('cs-modal').remove()">Close</button>
+    </div>`;
+  document.body.appendChild(el);
+  el.onclick = (e) => { if (e.target === el) el.remove(); };
+}
+
+function showWeeklyLimitModal(storyId) {
+  document.getElementById("cs-modal")?.remove();
+  const story  = storyById(storyId);
+  const accent = story ? storyAccent(story) : "#d4a574";
+  const el = document.createElement("div");
+  el.id = "cs-modal"; el.className = "cs-overlay";
+  el.innerHTML = `
+    <div class="cs-modal weekly-limit-modal" role="dialog" aria-modal="true">
+      <p class="cs-icon">🔒</p>
+      <h3 class="cs-title">Weekly limit reached</h3>
+      <p class="cs-body">Your memory was saved as <strong>in progress</strong>. Free accounts include ${FREE_WEEKLY_LIMIT} memory cards per week — your limit resets next Monday.</p>
+      <p class="cs-body" style="margin-top:.5rem">Upgrade to Individual or Family for unlimited memories.</p>
+      <a href="#/pricing" class="btn btn--primary" style="background:${accent};margin-bottom:.5rem" onclick="document.getElementById('cs-modal').remove()">
+        See plans →
+      </a>
+      <button class="btn btn--ghost" onclick="document.getElementById('cs-modal').remove()">
+        Keep the in-progress card
+      </button>
+    </div>`;
+  document.body.appendChild(el);
+  el.onclick = (e) => { if (e.target === el) el.remove(); };
 }
 
 window.showComingSoon = function(feature = "This feature") {
@@ -1715,16 +2368,16 @@ function renderPricing() {
           </div>
         </div>
         <ul class="plan-features">
-          <li class="feat-yes"><span class="feat-icon">✓</span> 3 AI conversations per day</li>
-          <li class="feat-yes"><span class="feat-icon">✓</span> Up to 10 memory cards</li>
+          <li class="feat-yes"><span class="feat-icon">✓</span> ${FREE_WEEKLY_PROMPTS} guided conversations per week</li>
+          <li class="feat-yes"><span class="feat-icon">✓</span> ${FREE_WEEKLY_LIMIT} memory cards per week</li>
+          <li class="feat-yes"><span class="feat-icon">✓</span> ${FREE_WEEKLY_PHOTOS} photo uploads per week</li>
           <li class="feat-yes"><span class="feat-icon">✓</span> 1 storyteller profile</li>
-          <li class="feat-no"><span class="feat-icon">—</span> Photo uploads</li>
           <li class="feat-no"><span class="feat-icon">—</span> Data export</li>
-          <li class="feat-no"><span class="feat-icon">—</span> Ad-free experience</li>
+          <li class="feat-no"><span class="feat-icon">—</span> Unlimited memory cards</li>
         </ul>
         <button class="btn plan-btn tier-free-btn btn--large btn--block"
           onclick="navigate('dashboard')">Continue free →</button>
-        <p class="plan-footnote">Hardcover book +$20 premium · Export $9.99</p>
+        <p class="plan-footnote">Hardcover book add-on · Export $9.99</p>
       </div>
 
       <!-- Individual -->
@@ -1928,7 +2581,13 @@ function renderSettings() {
           const accent = storyAccent(s);
           return `
           <div class="settings-item" id="dob-display-${h(s.id)}">
-            <div class="settings-item-icon" style="color:${accent}">${ICONS.user}</div>
+            <div class="story-avatar-upload-wrap" data-avatar-story="${h(s.id)}" style="color:${accent}">
+              <input type="file" id="avatar-input-${h(s.id)}" accept="image/*" style="display:none" data-avatar-story="${h(s.id)}" />
+              <div class="story-avatar-circle" style="background:${accent}18;border:1.5px solid ${accent}50;color:${accent}">
+                ${s.photo ? `<img src="${s.photo}" class="story-avatar-img" alt="${h(s.name)}" />` : (s.name||"?")[0].toUpperCase()}
+              </div>
+              <span class="story-avatar-hint">tap to change photo</span>
+            </div>
             <div class="settings-item-body">
               <p class="settings-item-label">${h(s.name)}${s.lastName ? " " + h(s.lastName) : ""}</p>
               <p class="settings-item-value">${dobDisplay || "Birthday not set"}</p>
@@ -2064,19 +2723,78 @@ function renderSettings() {
     ${tabs("menu")}`;
 }
 
+function renderTutorial() {
+  return `
+    <section class="view tutorial-view">
+      <header class="chat-header">
+        <a href="#/menu" class="chat-back">←</a>
+        <div class="chat-identity">
+          <p class="chat-ai-name">How to use A Story</p>
+        </div>
+        <div class="chat-header-spacer"></div>
+      </header>
+      <div class="tutorial-body">
+        <p class="tutorial-intro">A Story helps you preserve the memories of the people you love — through conversation, writing, and photos.</p>
+
+        <div class="tutorial-step">
+          <div class="tutorial-step-icon">${ICONS.mic}</div>
+          <div class="tutorial-step-content">
+            <h3 class="tutorial-step-title">Talk</h3>
+            <p class="tutorial-step-desc">Start a guided conversation. A Story gently asks questions to draw out memories — childhood, career, love, wisdom. Just answer naturally and a memory card is saved at the end.</p>
+          </div>
+        </div>
+
+        <div class="tutorial-step">
+          <div class="tutorial-step-icon">${ICONS.tree}</div>
+          <div class="tutorial-step-content">
+            <h3 class="tutorial-step-title">Archive</h3>
+            <p class="tutorial-step-desc">Browse and add memories. Write freely, upload photos, and search through every chapter of their life. All memories are organized by era.</p>
+          </div>
+        </div>
+
+        <div class="tutorial-step">
+          <div class="tutorial-step-icon">${ICONS.home}</div>
+          <div class="tutorial-step-content">
+            <h3 class="tutorial-step-title">Home</h3>
+            <p class="tutorial-step-desc">See everyone whose story you're preserving. Tap a person to talk with them or explore their archive.</p>
+          </div>
+        </div>
+
+        <div class="tutorial-step">
+          <div class="tutorial-step-icon">${ICONS.menu}</div>
+          <div class="tutorial-step-content">
+            <h3 class="tutorial-step-title">Menu</h3>
+            <p class="tutorial-step-desc">Access settings, invite family members, order a legacy book, and manage your account. Your legacy book turns every saved memory into a beautiful printed hardcover — order anytime from Menu → Legacy Book.</p>
+          </div>
+        </div>
+
+        <div class="tutorial-tip">
+          <span class="tutorial-tip-spark">✦</span>
+          <p>Free plan includes ${FREE_WEEKLY_PROMPTS} guided conversations and ${FREE_WEEKLY_FREE_WRITE} written memories per week, plus ${FREE_WEEKLY_PHOTOS} photo uploads. All limits reset every Monday.</p>
+        </div>
+
+        <a href="#/" class="btn btn--primary btn--block" style="background:var(--accent);margin-top:0.5rem">
+          Start capturing memories →
+        </a>
+      </div>
+    </section>
+    ${tabs("menu")}`;
+}
+
 function renderMenu() {
   const story = activeStory();
   return `
     <section class="view menu-view">
-      <div class="menu-profile-card">
+      <a href="#/settings" class="menu-profile-card menu-profile-card--link">
         <div class="menu-avatar">
           ${(currentUser?.firstName||"?")[0].toUpperCase()}
         </div>
-        <div>
+        <div class="menu-profile-info">
           <p class="menu-name">${h(currentUser?.firstName||"")} ${h(currentUser?.lastName||"")}</p>
           <p class="menu-email">${h(currentUser?.email||"")}</p>
         </div>
-      </div>
+        <span class="menu-profile-chevron">${ICONS.chevron}</span>
+      </a>
 
       <div class="menu-section">
         <p class="menu-section-title">Your stories</p>
@@ -2117,6 +2835,10 @@ function renderMenu() {
         <p class="menu-section-title">Account</p>
         <a href="#/settings" class="menu-item">
           <span class="menu-icon">${ICONS.settings}</span><span>Settings</span>
+          <span class="menu-item-arrow">${ICONS.chevron}</span>
+        </a>
+        <a href="#/tutorial" class="menu-item">
+          <span class="menu-icon">${ICONS.faq}</span><span>How to use A Story</span>
           <span class="menu-item-arrow">${ICONS.chevron}</span>
         </a>
         <a href="#/help" class="menu-item">
@@ -2245,6 +2967,10 @@ function bindEvents() {
     storyDraft = {};
     persist();
     navigate("dashboard");
+    const isFirstEver = state.stories.length === 1;
+    if (isFirstEver) {
+      setTimeout(() => showFirstSessionOnboarding(story.name, storyAccent(story)), 400);
+    }
   });
 
   /* ── Dashboard ── */
@@ -2297,16 +3023,6 @@ function bindEvents() {
     persist(); navigate("tree", { storyId });
   });
 
-  /* ── Memory card screen ── */
-  app.querySelectorAll("[data-star]").forEach(btn => {
-    btn.onclick = () => {
-      const n = parseInt(btn.dataset.star);
-      if (session) session.rating = n;
-      const starRow = document.getElementById("star-rating");
-      if (starRow) starRow.style.display = "none";
-    };
-  });
-
   /* ── Privacy toggle on memory card ── */
   document.getElementById("btn-mc-privacy")?.addEventListener("click", () => {
     if (!session) return;
@@ -2333,11 +3049,20 @@ function bindEvents() {
     if (!session) return;
     const story = storyById(session.storyId);
     if (!story) return;
-    const ratingNote = document.getElementById("mc-note")?.value.trim() || "";
-    const mem = createMemory({ ...session.draft, rating: session.rating || 0, ratingNote, period: session.period || "", privacy: session.privacy || "shared" });
+    const titleEdited = document.getElementById("mc-title-edit")?.value.trim();
+    const bodyEdited  = document.getElementById("mc-body-edit")?.value.trim();
+    const eraEdited   = document.getElementById("mc-era-select")?.value;
+    if (titleEdited) session.draft.title = titleEdited;
+    if (bodyEdited)  { session.draft.body = bodyEdited; session.draft.excerpt = bodyEdited.slice(0, 140); }
+    if (eraEdited)   session.draft.era = eraEdited;
+    const atLimit   = weeklyCardsLeft() === 0;
+    const memStatus = atLimit ? "in_progress" : "saved";
+    const mem = createMemory({ ...session.draft, rating: 0, ratingNote: "", period: session.period || "", privacy: session.privacy || "shared", status: memStatus });
     mem.photos = session.photos || [];
     story.memories.unshift(mem);
     story.sessionsCompleted += 1;
+
+    if (!atLimit) { incrementWeeklyCards(); updateStreak(story); }
 
     // Mark this era/topic as done for today
     if (session.selectedEra) {
@@ -2352,9 +3077,16 @@ function bindEvents() {
 
     persist();
     const isFirst = story.sessionsCompleted === 1;
+    const storyName = story.name;
     session = null;
     navigate("tree", { storyId: story.id });
-    if (isFirst) showNotificationPrompt();
+
+    if (atLimit) {
+      setTimeout(() => showWeeklyLimitModal(story.id), 300);
+    } else {
+      setTimeout(() => showSaveToast(storyName), 150);
+      if (isFirst) setTimeout(() => showNotificationPrompt(), 2800);
+    }
   });
 
   document.getElementById("mc-back")?.addEventListener("click", () => {
@@ -2363,9 +3095,40 @@ function bindEvents() {
     render();
   });
 
-  /* ── Memory detail: speak + AI refine ── */
+  /* ── Memory detail: speak to update ── */
   document.getElementById("btn-detail-speak")?.addEventListener("click", () => {
-    window.showComingSoon("Voice editing");
+    const textarea = document.querySelector("#mem-form textarea[name=body]");
+    if (!textarea) return;
+    const btn = document.getElementById("btn-detail-speak");
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) { window.showComingSoon("Voice editing"); return; }
+
+    if (btn._recognition) { btn._recognition.stop(); return; }
+
+    const recognition = new SpeechRecognition();
+    btn._recognition = recognition;
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+    let base = textarea.value;
+
+    recognition.onstart = () => btn.classList.add("is-listening");
+    recognition.onresult = (ev) => {
+      let interim = "", final = "";
+      for (let i = ev.resultIndex; i < ev.results.length; i++) {
+        ev.results[i].isFinal ? (final += ev.results[i][0].transcript) : (interim += ev.results[i][0].transcript);
+      }
+      if (final) base += (base && !base.endsWith(" ") ? " " : "") + final;
+      textarea.value = base + (interim ? (base && !base.endsWith(" ") ? " " : "") + interim : "");
+    };
+    recognition.onend = () => {
+      btn.classList.remove("is-listening");
+      btn._recognition = null;
+      textarea.value = base;
+      textarea.focus();
+    };
+    recognition.onerror = () => { btn.classList.remove("is-listening"); btn._recognition = null; };
+    recognition.start();
   });
 
   document.getElementById("btn-ai-refine")?.addEventListener("click", () => {
@@ -2417,6 +3180,28 @@ function bindEvents() {
     document.getElementById("settings-name-edit").style.display = "none";
   });
 
+  /* ── Settings: avatar upload ── */
+  app.querySelectorAll(".story-avatar-upload-wrap").forEach(wrap => {
+    wrap.addEventListener("click", () => {
+      const input = document.getElementById(`avatar-input-${wrap.dataset.avatarStory}`);
+      input?.click();
+    });
+  });
+  app.querySelectorAll("input[data-avatar-story]").forEach(input => {
+    input.addEventListener("change", (e) => {
+      const storyId = e.target.dataset.avatarStory;
+      const story   = storyById(storyId);
+      if (!story || !e.target.files[0]) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        story.photo = ev.target.result;
+        persist();
+        render();
+      };
+      reader.readAsDataURL(e.target.files[0]);
+    });
+  });
+
   /* ── Settings: DOB edit per story profile ── */
   app.querySelectorAll("[data-dob-edit]").forEach(btn => {
     const id = btn.dataset.dobEdit;
@@ -2454,26 +3239,25 @@ function bindEvents() {
     });
   });
 
-  /* ── Settings: export data ── */
+  /* ── Settings: export data (paywall) ── */
   document.getElementById("btn-export-data")?.addEventListener("click", () => {
-    const exportData = {
-      exportedAt: new Date().toISOString(),
-      user: { email: currentUser?.email, firstName: currentUser?.firstName, lastName: currentUser?.lastName },
-      stories: state.stories.map(s => ({
-        name: s.name, lastName: s.lastName, relationship: s.relationship,
-        birthDay: s.birthDay, birthMonth: s.birthMonth, birthYear: s.birthYear,
-        memories: s.memories.map(m => ({
-          title: m.title, body: m.body, era: m.era,
-          period: m.period, privacy: m.privacy,
-          createdAt: m.createdAt,
-        })),
-      })),
-    };
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement("a");
-    a.href = url; a.download = "a-story-archive.json";
-    a.click(); URL.revokeObjectURL(url);
+    document.getElementById("cs-modal")?.remove();
+    const accent = activeStory() ? storyAccent(activeStory()) : "#d4a574";
+    const el = document.createElement("div");
+    el.id = "cs-modal"; el.className = "cs-overlay";
+    el.innerHTML = `
+      <div class="cs-modal weekly-limit-modal" role="dialog" aria-modal="true">
+        <p class="cs-icon">${ICONS.download}</p>
+        <h3 class="cs-title">Export your archive</h3>
+        <p class="cs-body">Exporting memories as JSON or PDF is available on paid plans.</p>
+        <p class="cs-body" style="margin-top:.5rem">Upgrade to download your full archive and keep it forever — on any device.</p>
+        <a href="#/pricing" class="btn btn--primary" style="background:${accent};margin-bottom:.5rem" onclick="document.getElementById('cs-modal').remove()">
+          See plans →
+        </a>
+        <button class="btn btn--ghost" onclick="document.getElementById('cs-modal').remove()">Not now</button>
+      </div>`;
+    document.body.appendChild(el);
+    el.onclick = (e) => { if (e.target === el) el.remove(); };
   });
 
   /* ── Photo memory form ── */
@@ -2493,6 +3277,91 @@ function bindEvents() {
     persist();
     photoMemoryDraft = null;
     navigate("tree", { storyId });
+  });
+
+  /* ── Manual add memory form ── */
+  document.getElementById("add-memory-form")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const storyId = e.target.dataset.storyId;
+    const story   = storyById(storyId);
+    if (!story) return;
+    const fd    = new FormData(e.target);
+    const body  = fd.get("body")?.toString().trim() || "";
+    const era   = fd.get("era")?.toString() || ERAS[0];
+    const period = fd.get("period")?.toString().trim() || "";
+    let title   = fd.get("title")?.toString().trim() || "";
+    if (!title) title = body.length > 60 ? body.slice(0, 57) + "…" : body;
+    const mem = createMemory({ title, body, era, excerpt: body.slice(0, 140), rating: 0, ratingNote: "", period, privacy: "shared", status: "saved" });
+    if (addMemoryPhotos.length) { mem.photos = [...addMemoryPhotos]; incrementWeeklyPhotos(addMemoryPhotos.length); }
+    addMemoryPhotos = [];
+    updateStreak(story);
+    story.memories.unshift(mem);
+    persist();
+    navigate("tree", { storyId });
+    setTimeout(() => showSaveToast(story.name), 150);
+  });
+
+  /* ── Free-write form submit ── */
+  document.getElementById("fw-form")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const storyId = e.target.dataset.storyId;
+    const story   = storyById(storyId);
+    if (!story) return;
+    const fd     = new FormData(e.target);
+    const body   = fd.get("body")?.toString().trim() || "";
+    const era    = fd.get("era")?.toString() || ERAS[0];
+    const period = fd.get("period")?.toString().trim() || "";
+    let title    = fd.get("title")?.toString().trim() || "";
+    if (!title) title = body.length > 60 ? body.slice(0, 57) + "…" : body;
+
+    const atLimit = weeklyCardsLeft() === 0;
+    const mem = createMemory({ title, body, era, excerpt: body.slice(0, 140), period, privacy: "shared", status: atLimit ? "in_progress" : "saved" });
+    if (freeWritePhotos.length) { mem.photos = [...freeWritePhotos]; incrementWeeklyPhotos(freeWritePhotos.length); }
+    freeWritePhotos = [];
+    if (!atLimit) { incrementWeeklyCards(); updateStreak(story); }
+    incrementWeeklyFreeWrite();
+    story.memories.unshift(mem);
+    persist();
+    navigate("tree", { storyId });
+    if (atLimit) {
+      setTimeout(() => showWeeklyLimitModal(storyId), 300);
+    } else {
+      setTimeout(() => showSaveToast(story.name), 150);
+    }
+  });
+
+  /* ── Free-write photo upload ── */
+  document.getElementById("btn-fw-photo")?.addEventListener("click", () => {
+    document.getElementById("fw-photo-input")?.click();
+  });
+  document.getElementById("fw-photo-input")?.addEventListener("change", (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    const left = weeklyPhotosLeft();
+    if (left === 0) { showWeeklyPhotoLimitModal(); e.target.value = ""; return; }
+    const allowed = files.slice(0, left);
+    readPhotos(allowed, (base64s) => {
+      freeWritePhotos.push(...base64s);
+      refreshFwPhotoGrid();
+    });
+    e.target.value = "";
+  });
+
+  /* ── Add-memory photo upload ── */
+  document.getElementById("btn-add-memory-photo")?.addEventListener("click", () => {
+    document.getElementById("add-memory-photo-input")?.click();
+  });
+  document.getElementById("add-memory-photo-input")?.addEventListener("change", (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    const left = weeklyPhotosLeft();
+    if (left === 0) { showWeeklyPhotoLimitModal(); e.target.value = ""; return; }
+    const allowed = files.slice(0, left);
+    readPhotos(allowed, (base64s) => {
+      addMemoryPhotos.push(...base64s);
+      refreshAddMemoryPhotoGrid();
+    });
+    e.target.value = "";
   });
 
   /* ── Archive photo upload ── */
@@ -2567,11 +3436,16 @@ function bindEvents() {
   /* ── Memory card photo upload ── */
   document.getElementById("mc-photo-input")?.addEventListener("change", (e) => {
     if (!session) return;
+    const left = weeklyPhotosLeft();
+    if (left === 0) { showWeeklyPhotoLimitModal(); e.target.value = ""; return; }
     if (!session.photos) session.photos = [];
-    readPhotos(Array.from(e.target.files), (base64s) => {
+    const allowed = Array.from(e.target.files).slice(0, left);
+    readPhotos(allowed, (base64s) => {
       session.photos.push(...base64s);
+      incrementWeeklyPhotos(base64s.length);
       refreshMcPhotoGrid();
     });
+    e.target.value = "";
   });
 
   app.querySelectorAll("[data-photo-idx]").forEach(btn => {
@@ -2587,9 +3461,13 @@ function bindEvents() {
     const story  = storyById(storyId);
     const memory = story?.memories.find(m => m.id === memId);
     if (!memory) return;
+    const left = weeklyPhotosLeft();
+    if (left === 0) { showWeeklyPhotoLimitModal(); e.target.value = ""; return; }
     if (!memory.photos) memory.photos = [];
-    readPhotos(Array.from(e.target.files), (base64s) => {
+    const allowed = Array.from(e.target.files).slice(0, left);
+    readPhotos(allowed, (base64s) => {
       memory.photos.push(...base64s);
+      incrementWeeklyPhotos(base64s.length);
       persist();
       refreshDetailPhotoGrid(memory);
     });
@@ -2748,6 +3626,42 @@ function bindEvents() {
 
   /* ── Chat ── */
   setupChat();
+
+  /* ── Free-write back ── */
+  document.getElementById("fw-back")?.addEventListener("click", () => {
+    navigate("talk", { storyId: route.params.storyId });
+  });
+
+  /* ── Prompt choice screen ── */
+  document.getElementById("chat-back-choice")?.addEventListener("click", () => {
+    session = null;
+    navigate("dashboard");
+  });
+
+  document.getElementById("btn-pc-prompt")?.addEventListener("click", (e) => {
+    const storyId = e.currentTarget.dataset.storyId;
+    if (weeklyPromptsLeft() === 0) {
+      showWeeklyPromptLimitModal();
+      return;
+    }
+    const story  = storyById(storyId);
+    if (!story) return;
+    incrementWeeklyPrompts();
+    const firstP  = isOwn(story);
+    const prompts = getPrompts(firstP, story.name);
+    const prompt  = prompts[story.sessionsCompleted % prompts.length];
+    session = { storyId, prompt, firstPerson: firstP, personName: story.name, phase: "first", answers: [], selectedEra: null, period: "", privacy: "shared", isFree: false };
+    render();
+  });
+
+  document.getElementById("btn-pc-free")?.addEventListener("click", (e) => {
+    const storyId = e.currentTarget.dataset.storyId;
+    if (weeklyFreeWriteLeft() === 0) {
+      showWeeklyFreeWriteLimitModal(storyId);
+      return;
+    }
+    navigate("free-write", { storyId });
+  });
 }
 
 function setNsStep(step) {
@@ -2788,6 +3702,38 @@ function refreshMcPhotoGrid() {
   });
 }
 
+function refreshFwPhotoGrid() {
+  const grid = document.getElementById("fw-photo-grid");
+  if (!grid) return;
+  grid.innerHTML = freeWritePhotos.map((src, i) => `
+    <div class="photo-thumb">
+      <img src="${src}" alt="Memory photo" />
+      <button class="photo-remove" data-fw-photo="${i}" aria-label="Remove photo">×</button>
+    </div>`).join("");
+  grid.querySelectorAll("[data-fw-photo]").forEach(btn => {
+    btn.onclick = () => {
+      freeWritePhotos.splice(parseInt(btn.dataset.fwPhoto), 1);
+      refreshFwPhotoGrid();
+    };
+  });
+}
+
+function refreshAddMemoryPhotoGrid() {
+  const grid = document.getElementById("add-memory-photo-grid");
+  if (!grid) return;
+  grid.innerHTML = addMemoryPhotos.map((src, i) => `
+    <div class="photo-thumb">
+      <img src="${src}" alt="Memory photo" />
+      <button class="photo-remove" data-am-photo="${i}" aria-label="Remove photo">×</button>
+    </div>`).join("");
+  grid.querySelectorAll("[data-am-photo]").forEach(btn => {
+    btn.onclick = () => {
+      addMemoryPhotos.splice(parseInt(btn.dataset.amPhoto), 1);
+      refreshAddMemoryPhotoGrid();
+    };
+  });
+}
+
 function refreshDetailPhotoGrid(memory) {
   const grid = document.getElementById("detail-photo-grid");
   if (!grid) return;
@@ -2812,20 +3758,42 @@ function setupChat() {
   const sendBtn  = document.getElementById("btn-send");
   const backBtn  = document.getElementById("chat-back");
   const micBtn   = document.getElementById("btn-mic");
+  const saveBtn  = document.getElementById("btn-chat-save");
   if (!textarea || !sendBtn) return;
 
   backBtn?.addEventListener("click", () => {
     const sid = session?.storyId;
     session = null;
-    sid ? navigate("dashboard") : navigate("dashboard");
+    navigate("dashboard");
+  });
+
+  // Wire save button
+  saveBtn?.addEventListener("click", () => {
+    if (!session || session.answers.length === 0) return;
+    session.draft  = draftMemoryFromAnswers(session.prompt || { era: "Life", question: "" }, session.answers);
+    // Auto-generate title from first answer for free-write mode
+    if (!session.draft.title && session.answers[0]) {
+      const first = session.answers[0].trim();
+      session.draft.title = first.length > 60 ? first.slice(0, 57) + "…" : first;
+    }
+    session.phase  = "card";
+    session.rating = 0;
+    render();
   });
 
   setTimeout(() => {
     if (!session) return;
     const pName = session.personName;
-    const intro = session.firstPerson
-      ? `Hello — I'm so glad you're here.\n\nI'm here to listen and help preserve your story. There are no rules, no order, no right or wrong answers. You're in complete control — share whatever feels meaningful, and stop or pause whenever you like.\n\nWhenever you're ready... ${session.prompt.question}`
-      : `Hello — I'm so glad you're here.\n\nI'm here to help you capture and preserve ${pName}'s story — the memories, the moments, the details that matter. There are no rules and no order. Share whatever comes to mind, and stop whenever you like.\n\nWhenever you're ready... ${session.prompt.question}`;
+    let intro;
+    if (session.isFree) {
+      intro = session.firstPerson
+        ? `Hello — I'm here to listen.\n\nShare whatever comes to mind — a memory, a moment, a feeling. There's no order and no rules. When you feel ready, tap "Save as memory card."\n\nWhenever you're ready, just start writing.`
+        : `Hello — I'm here to help capture ${pName}'s story.\n\nShare any memory that comes to mind — big or small, recent or distant. Tap "Save as memory card" when you're done.\n\nWhenever you're ready, just start writing.`;
+    } else {
+      intro = session.firstPerson
+        ? `Hello — I'm so glad you're here.\n\nI'm here to listen and help preserve your story. There are no rules, no order, no right or wrong answers.\n\nWhenever you're ready... ${session.prompt.question}`
+        : `Hello — I'm so glad you're here.\n\nI'm here to help capture and preserve ${pName}'s story — the memories, the moments, the details that matter.\n\nWhenever you're ready... ${session.prompt.question}`;
+    }
     appendAI(intro);
   }, 380);
 
@@ -2839,29 +3807,98 @@ function setupChat() {
   });
   sendBtn.addEventListener("click", send);
   micBtn?.addEventListener("click", () => {
-    if (!textarea.value.trim()) {
-      textarea.value = DEMO_VOICES[Math.floor(Math.random()*DEMO_VOICES.length)];
-      textarea.dispatchEvent(new Event("input"));
-      textarea.focus();
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      if (!textarea.value.trim()) {
+        textarea.value = DEMO_VOICES[Math.floor(Math.random()*DEMO_VOICES.length)];
+        textarea.dispatchEvent(new Event("input"));
+        textarea.focus();
+      }
+      return;
     }
+
+    // Stop active session if mic is already listening
+    if (micBtn._recognition) {
+      micBtn._recognition.stop();
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    micBtn._recognition = recognition;
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+
+    let committedText = textarea.value;
+
+    recognition.onstart = () => {
+      micBtn.classList.add("is-listening");
+      textarea.placeholder = "Listening…";
+    };
+
+    recognition.onresult = (event) => {
+      let interim = "";
+      let finalChunk = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          finalChunk += event.results[i][0].transcript;
+        } else {
+          interim += event.results[i][0].transcript;
+        }
+      }
+      if (finalChunk) {
+        committedText += (committedText && !committedText.endsWith(" ") ? " " : "") + finalChunk;
+      }
+      textarea.value = committedText + (interim ? (committedText && !committedText.endsWith(" ") ? " " : "") + interim : "");
+      textarea.dispatchEvent(new Event("input"));
+    };
+
+    recognition.onend = () => {
+      micBtn.classList.remove("is-listening");
+      micBtn._recognition = null;
+      textarea.value = committedText;
+      textarea.dispatchEvent(new Event("input"));
+      textarea.placeholder = "Speak or type…";
+      textarea.focus();
+    };
+
+    recognition.onerror = () => {
+      micBtn.classList.remove("is-listening");
+      micBtn._recognition = null;
+      textarea.placeholder = "Speak or type…";
+    };
+
+    recognition.start();
   });
+
+  function unlockSave() {
+    if (saveBtn && saveBtn.disabled) {
+      saveBtn.disabled = false;
+      saveBtn.classList.add("is-ready");
+    }
+  }
 
   function send() {
     const text = textarea.value.trim();
-    if (!text || !session || session.phase === "done" || session.phase === "card" || session.phase === "wrap-up") return;
+    if (!text || !session || session.phase === "done" || session.phase === "card") return;
     appendUser(text);
     textarea.value = ""; textarea.style.height = "auto";
     sendBtn.disabled = true; textarea.disabled = true;
     textarea.placeholder = "A Story is listening…";
     session.answers.push(text);
+    unlockSave();
 
     if (session.phase === "first") {
       session.phase = "followup";
       showThinking();
       setTimeout(() => {
         hideThinking();
-        appendAI(aiFollowUpResponse(text, session.prompt.followUp));
+        const followUp = session.isFree
+          ? FREE_FOLLOWUPS[Math.floor(Math.random()*FREE_FOLLOWUPS.length)]
+          : aiFollowUpResponse(text, session.prompt.followUp);
+        appendAI(followUp);
         textarea.disabled = false; textarea.placeholder = "Keep going…"; textarea.focus();
+        sendBtn.disabled = !textarea.value.trim();
       }, 1100 + Math.random()*500);
 
     } else if (session.phase === "followup") {
@@ -2869,48 +3906,39 @@ function setupChat() {
       showThinking();
       setTimeout(() => {
         hideThinking();
-        appendAI(aiPeriodQuestion(session.firstPerson, session.personName, session.prompt.era));
-        textarea.disabled = false; textarea.placeholder = "e.g. Around 1978, mid-50s…"; textarea.focus();
+        const periodQ = session.isFree
+          ? `When did this happen? Even a rough sense is perfect — "around 1975", "when I was a teenager", or a specific date like June 15, 1975.`
+          : aiPeriodQuestion(session.firstPerson, session.personName, session.prompt.era);
+        appendAI(periodQ);
+        textarea.disabled = false; textarea.placeholder = "e.g. June 1975, mid-50s, age 30s…"; textarea.focus();
+        sendBtn.disabled = !textarea.value.trim();
       }, 900 + Math.random()*400);
 
     } else if (session.phase === "period") {
       session.period = text;
-      session.phase = "reflecting";
+      session.phase = "followup";
       showThinking();
       setTimeout(() => {
         hideThinking();
-        appendAI(aiReflection(session.answers, session.firstPerson, session.personName));
-        setTimeout(() => {
-          session.phase = "wrap-up";
-          textarea.disabled = true;
-          textarea.placeholder = "A Story is listening…";
-          const wrapEl = document.createElement("div");
-          wrapEl.id = "wrap-up-choices";
-          wrapEl.className = "wrap-up-choices";
-          wrapEl.innerHTML = `
-            <p class="wrap-up-prompt">Would you like to keep sharing, or save this as a memory card?</p>
-            <div class="wrap-up-btns">
-              <button class="wrap-up-btn wrap-up-btn--continue" id="btn-wrapup-continue">Keep sharing</button>
-              <button class="wrap-up-btn wrap-up-btn--save" id="btn-wrapup-save">Save memory card →</button>
-            </div>`;
-          chatEl().appendChild(wrapEl);
-          scrollDn();
-          document.getElementById("btn-wrapup-continue")?.addEventListener("click", () => {
-            wrapEl.remove();
-            session.phase = "followup";
-            textarea.disabled = false;
-            textarea.placeholder = "Keep going…";
-            textarea.focus();
-          });
-          document.getElementById("btn-wrapup-save")?.addEventListener("click", () => {
-            wrapEl.remove();
-            session.draft  = draftMemoryFromAnswers(session.prompt, session.answers);
-            session.phase  = "card";
-            session.rating = 0;
-            render();
-          });
-        }, 600);
+        const reflection = session.isFree
+          ? FREE_REFLECTIONS[Math.floor(Math.random()*FREE_REFLECTIONS.length)] + "\n\nKeep sharing if there's more, or tap \"Save as memory card\" when you're ready."
+          : aiReflection(session.answers, session.firstPerson, session.personName) + "\n\nKeep sharing if there's more, or tap \"Save as memory card\" when you're ready.";
+        appendAI(reflection);
+        textarea.disabled = false; textarea.placeholder = "Keep sharing…"; textarea.focus();
+        sendBtn.disabled = !textarea.value.trim();
       }, 1600 + Math.random()*600);
+
+    } else if (session.phase === "followup" || session.phase === "reflecting") {
+      showThinking();
+      setTimeout(() => {
+        hideThinking();
+        const followUp = session.isFree
+          ? FREE_FOLLOWUPS[Math.floor(Math.random()*FREE_FOLLOWUPS.length)]
+          : aiFollowUpResponse(text, session.prompt.followUp);
+        appendAI(followUp);
+        textarea.disabled = false; textarea.placeholder = "Keep going…"; textarea.focus();
+        sendBtn.disabled = !textarea.value.trim();
+      }, 900 + Math.random()*500);
     }
   }
 }

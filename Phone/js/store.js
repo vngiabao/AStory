@@ -49,7 +49,7 @@ export function createStory({
   };
 }
 
-export function createMemory({ title, body, era, excerpt, rating, ratingNote, period, privacy }) {
+export function createMemory({ title, body, era, excerpt, rating, ratingNote, period, privacy, status }) {
   return {
     id: crypto.randomUUID(),
     title,
@@ -60,6 +60,7 @@ export function createMemory({ title, body, era, excerpt, rating, ratingNote, pe
     ratingNote: ratingNote || "",
     period: period || "",
     privacy: privacy || "shared",
+    status: status || "saved",
     photos: [],
     createdAt: new Date().toISOString(),
   };
@@ -73,6 +74,7 @@ export const ERAS = [
   "Love & family",
   "Later years",
   "Wisdom",
+  "Other",
 ];
 
 export const RELATIONSHIPS = [

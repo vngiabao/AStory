@@ -1,5 +1,17 @@
 const SESSION_KEY  = "astory-session-v1";
 const ACCOUNTS_KEY = "astory-accounts-v1";
+const HASH_PEPPER  = "astory_k9x2v1";
+
+// FNV-1a 32-bit — prevents plaintext storage without needing async crypto
+function hashPw(password) {
+  const input = HASH_PEPPER + password;
+  let h = 2166136261;
+  for (let i = 0; i < input.length; i++) {
+    h ^= input.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0).toString(16).padStart(8, "0");
+}
 
 export const DEMO_EMAIL    = "demo@astory.com";
 export const DEMO_PASSWORD = "demo1234";
@@ -96,7 +108,7 @@ export function createAccount(firstName, lastName, email, password) {
   if (norm === DEMO_EMAIL) return { error: "That email is already taken." };
   const accs = readAccounts();
   if (accs[norm]) return { error: "An account with this email already exists." };
-  accs[norm] = { firstName: firstName.trim(), lastName: lastName.trim(), password };
+  accs[norm] = { firstName: firstName.trim(), lastName: lastName.trim(), password: hashPw(password), hashed: true };
   writeAccounts(accs);
   return { ok: true, firstName: firstName.trim(), lastName: lastName.trim() };
 }
@@ -112,7 +124,17 @@ export function verifyLogin(email, password) {
   const accs = readAccounts();
   const acc  = accs[norm];
   if (!acc) return { error: "No account found with that email." };
-  if (acc.password !== password) return { error: "Incorrect password." };
+
+  // Transparently migrate legacy plaintext passwords on first login
+  if (!acc.hashed) {
+    if (acc.password !== password) return { error: "Incorrect password." };
+    acc.password = hashPw(password);
+    acc.hashed   = true;
+    writeAccounts(accs);
+    return { ok: true, firstName: acc.firstName, lastName: acc.lastName };
+  }
+
+  if (acc.password !== hashPw(password)) return { error: "Incorrect password." };
   return { ok: true, firstName: acc.firstName, lastName: acc.lastName };
 }
 
