@@ -204,7 +204,7 @@ nav.scrolled{background:rgba(239,230,212,0.92);backdrop-filter:blur(12px);border
 .split-text p{font-size:0.93rem;font-weight:300;color:var(--ink-soft);line-height:1.8;margin-bottom:1rem;}
 .photo-stack{position:relative;width:280px;height:330px;margin:0 auto;}
 .photo-card{position:absolute;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#fff;box-shadow:0 14px 40px rgba(43,33,23,0.12);}
-.photo-img{width:100%;display:block;}
+.photo-img{width:100%;height:170px;display:block;object-fit:cover;border-radius:2px;}
 .photo-caption{padding:0.6rem 0.75rem;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.76rem;color:var(--ink-soft);line-height:1.4;border-top:1px solid var(--line-soft);background:var(--paper-3);}
 .photo-tag{position:absolute;background:#231a12;border:1px solid rgba(199,162,78,0.4);border-radius:6px;padding:0.45rem 0.65rem;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.72rem;color:var(--gold);white-space:nowrap;box-shadow:0 4px 16px rgba(43,33,23,0.25);}
 
@@ -561,27 +561,13 @@ footer .f-links a:focus-visible{outline:2px solid var(--gold);outline-offset:3px
     </div>
     <div class="photo-stack reveal rd2">
       <div class="photo-card" style="width:210px;transform:rotate(-4deg) translate(20px,10px);z-index:1;">
-        <svg class="photo-img" viewBox="0 0 210 160" xmlns="http://www.w3.org/2000/svg">
-          <rect width="210" height="160" fill="#e8d8bd"/><rect width="210" height="84" fill="#d9c39e"/>
-          <ellipse cx="160" cy="42" rx="60" ry="40" fill="rgba(199,162,78,0.3)"/><rect y="84" width="210" height="76" fill="#cdb58e"/>
-          <ellipse cx="70" cy="80" rx="8" ry="16" fill="#6b5536"/><circle cx="70" cy="62" r="6" fill="#6b5536"/>
-          <ellipse cx="100" cy="82" rx="7" ry="14" fill="#6b5536"/><circle cx="100" cy="66" r="5" fill="#6b5536"/>
-          <ellipse cx="130" cy="81" rx="9" ry="15" fill="#6b5536"/><circle cx="130" cy="64" r="6" fill="#6b5536"/>
-          <circle cx="160" cy="36" r="5" fill="rgba(255,240,200,0.8)"/>
-        </svg>
-        <div class="photo-caption">Summer 1962 — who are they?</div>
-        <div class="photo-tag" style="bottom:2.2rem;right:-1rem;font-size:0.68rem;">"That's your great-uncle…"</div>
+        <img class="photo-img" src="assets/family1.webp" alt="Parents kissing their swaddled baby on the forehead" loading="lazy">
+        <div class="photo-caption">Newborn baby</div>
+        <div class="photo-tag" style="bottom:2.2rem;right:-1rem;font-size:0.68rem;"></div>
       </div>
       <div class="photo-card" style="width:220px;transform:rotate(2.5deg) translate(-10px,90px);z-index:2;">
-        <svg class="photo-img" viewBox="0 0 220 168" xmlns="http://www.w3.org/2000/svg">
-          <rect width="220" height="168" fill="#e9dabf"/><rect y="98" width="220" height="70" fill="#d3bd95"/>
-          <rect x="20" y="90" width="180" height="9" rx="2" fill="#b89e72"/><ellipse cx="70" cy="90" rx="28" ry="6" fill="#c7b288"/><ellipse cx="150" cy="90" rx="28" ry="6" fill="#c7b288"/>
-          <ellipse cx="110" cy="76" rx="20" ry="26" fill="rgba(199,162,78,0.4)"/><rect x="107" y="56" width="6" height="22" rx="2" fill="#8a6f43"/><ellipse cx="110" cy="54" rx="4" ry="6" fill="#ffe9b0"/>
-          <ellipse cx="60" cy="86" rx="14" ry="22" fill="#6b5536"/><circle cx="60" cy="63" r="9" fill="#6b5536"/>
-          <ellipse cx="155" cy="85" rx="13" ry="20" fill="#6b5536"/><circle cx="155" cy="64" r="8" fill="#6b5536"/>
-          <rect x="168" y="12" width="36" height="50" rx="2" fill="rgba(255,240,200,0.5)" stroke="rgba(199,162,78,0.4)" stroke-width="0.5"/>
-        </svg>
-        <div class="photo-caption">A dinner no one remembered the date of — until now</div>
+        <img class="photo-img" src="assets/family2.jpg" alt="Four generations of a family gathered close around a sleeping newborn" loading="lazy">
+        <div class="photo-caption">Fall 2008 - Our very first family photo</div>
         <div class="photo-tag" style="top:0.8rem;left:-0.75rem;">✦ Memory unlocked</div>
       </div>
     </div>
@@ -1171,15 +1157,19 @@ if(tlWrapper && tlHint){
 }
 
 /* Our Story overlay */
+/* Our Story overlay */
 function ourStoryTrap(e){ trapFocus(e, 'our-story-page'); }
 function openOurStory(){
   const page=document.getElementById('our-story-page');
   page.style.display='block';
   document.body.style.overflow='hidden';
   page.scrollTop=0;
+  // re-run reveals inside overlay
   page.querySelectorAll('.reveal:not(.in)').forEach(el=>io.observe(el));
+  // move focus into the overlay
   const closeBtn = page.querySelector('button');
   closeBtn.focus();
+  // trap focus inside overlay
   page.addEventListener('keydown', ourStoryTrap);
 }
 
