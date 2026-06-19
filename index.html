@@ -119,7 +119,11 @@ nav.scrolled{background:rgba(239,230,212,0.92);backdrop-filter:blur(12px);border
 #about-page a:focus-visible,
 #about-page button:focus-visible,
 #faq-page a:focus-visible,
-#faq-page button:focus-visible {outline: 2px solid var(--ember); outline-offset: 3px; border-radius: 2px;}
+#faq-page button:focus-visible,
+#terms-page a:focus-visible,
+#terms-page button:focus-visible,
+#privacy-policy-page a:focus-visible,
+#privacy-policy-page button:focus-visible {outline: 2px solid var(--ember); outline-offset: 3px; border-radius: 2px;}
 
 @keyframes scrollPulse{0%,100%{opacity:0.3;transform:scaleY(1);}50%{opacity:1;transform:scaleY(1.25);}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:none;}}
@@ -365,6 +369,29 @@ nav.scrolled{background:rgba(239,230,212,0.92);backdrop-filter:blur(12px);border
   .about-page-body{padding:3.5rem 1.25rem 5rem;}
 }
 
+/* Terms / Privacy — standalone legal page content */
+.legal-page-body{max-width:680px;margin:0 auto;padding:5rem 2rem 6rem;}
+.legal-updated{font-family:'Figtree',sans-serif;font-size:0.78rem;color:var(--ink-dim);letter-spacing:0.02em;margin-bottom:3rem;padding-bottom:2rem;border-bottom:1px solid var(--line);}
+.legal-intro{font-size:1.04rem;line-height:1.85;color:var(--ink-soft);margin-bottom:3rem;}
+.legal-section{margin-bottom:2.6rem;}
+.legal-section:last-of-type{margin-bottom:0;}
+.legal-section h3{display:flex;align-items:baseline;gap:0.7rem;font-family:'Cormorant Garamond',serif;font-size:clamp(1.25rem,2.4vw,1.55rem);font-weight:500;color:var(--ink);margin-bottom:0.9rem;}
+.legal-section h3 .legal-num{font-family:'Figtree',sans-serif;font-size:0.78rem;font-weight:600;color:var(--ember);letter-spacing:0.04em;flex-shrink:0;}
+.legal-section p{font-size:0.96rem;line-height:1.85;color:var(--ink-soft);margin-bottom:1rem;}
+.legal-section p:last-child{margin-bottom:0;}
+.legal-section ul{margin:0 0 1rem 0;padding-left:1.3rem;display:flex;flex-direction:column;gap:0.6rem;}
+.legal-section li{font-size:0.96rem;line-height:1.75;color:var(--ink-soft);}
+.legal-section .legal-sub{font-weight:500;color:var(--ink);}
+.legal-section a{color:var(--ember);text-decoration:none;border-bottom:1px solid rgba(180,90,43,0.3);}
+.legal-section a:hover{border-bottom-color:var(--ember);}
+.legal-toc{display:flex;flex-wrap:wrap;gap:0.5rem 1.2rem;margin-bottom:3rem;padding-bottom:2rem;border-bottom:1px solid var(--line);}
+.legal-toc a{font-family:'Figtree',sans-serif;font-size:0.78rem;font-weight:500;color:var(--ink-soft);text-decoration:none;cursor:pointer;transition:color 0.25s;}
+.legal-toc a:hover{color:var(--ember);}
+@media(max-width:600px){
+  .legal-page-body{padding:3.5rem 1.25rem 5rem;}
+  .legal-toc{gap:0.4rem 0.9rem;}
+}
+
 
 /* OUR STORY SECTION — Firelight hero + Daylight article */
 #our-story{scroll-margin-top:0;}
@@ -396,7 +423,7 @@ footer{padding:2.2rem 3rem;display:grid;grid-template-columns:1fr auto 1fr;align
 footer .f-logo{display:flex;align-items:center;gap:8px;font-family:'Cormorant Garamond',serif;font-size:1rem;color:var(--cream);justify-self:start;}
 footer a{color:var(--gold);text-decoration:none;}
 footer .f-meta{color:rgba(239,230,212,0.4);justify-self:end;text-align:right;}
-footer .f-links{display:flex;gap:2rem;justify-self:center;}
+footer .f-links{display:flex;flex-wrap:wrap;gap:0.6rem 1.5rem;justify-self:center;justify-content:center;}
 footer .f-links a{cursor:pointer;font-family:'Figtree',sans-serif;font-size:0.72rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:rgba(239,230,212,0.55);transition:color 0.3s;padding:0.25rem 0;}
 footer .f-links a:hover{color:var(--gold);}
 footer .f-links a:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:2px;}
@@ -772,6 +799,8 @@ footer .f-links a:focus-visible{outline:2px solid var(--gold);outline-offset:3px
   <div class="f-links">
     <a tabindex="0" onclick="closeOurStory(); openAbout();">About/Mission</a>
     <a tabindex="0" onclick="closeOurStory(); openFaq();">FAQ</a>
+    <a tabindex="0" onclick="closeOurStory(); openTerms();">Terms of Service</a>
+    <a tabindex="0" onclick="closeOurStory(); openPrivacyPolicy();">Privacy Policy</a>
   </div>
   <div class="f-meta">© 2026 · <a href="mailto:contact@astoryapp.com">contact@astoryapp.com</a> · iOS &amp; Android coming soon</div>
 </footer>
@@ -996,6 +1025,255 @@ footer .f-links a:focus-visible{outline:2px solid var(--gold);outline-offset:3px
 </div>
 
 
+<!-- TERMS OF SERVICE PAGE — shown when footer "Terms of Service" clicked -->
+<div id="terms-page" style="display:none;position:fixed;inset:0;z-index:500;overflow-y:auto;background:var(--paper);">
+  <div style="position:sticky;top:0;z-index:10;padding:1.1rem 3rem;display:flex;align-items:center;justify-content:space-between;background:rgba(239,230,212,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);">
+    <a tabindex="0" onclick="closeTerms(); window.scrollTo({top:0,behavior: prefersReduced ? 'auto' : 'smooth'});" style="display:flex;align-items:center;gap:10px;font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:600;color:var(--ink);cursor:pointer;text-decoration:none;">
+      <svg aria-hidden="true" width="28" height="28" viewBox="0 0 64 64"><path d="M32 9 C24 23 16 41 11 55 L18 55 C27 41 30 25 32 13 Z" fill="#2B2117"/><path d="M32 9 C40 23 48 41 53 55 L46 55 C37 41 34 25 32 13 Z" fill="#2B2117"/><g transform="translate(23.33,29.33) scale(0.542)" fill="#B45A2B"><path d="M16 29 C16 29 4 20 4 11 C4 6 8 3 12 3 C14 3 16 5 16 6 C16 5 18 3 20 3 C24 3 28 6 28 11 C28 20 16 29 16 29 Z"/></g></svg>
+      Story
+    </a>
+    <button onclick="closeTerms()" style="background:none;border:none;cursor:pointer;font-family:'Figtree',sans-serif;font-size:0.76rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-soft);display:flex;align-items:center;gap:0.4rem;padding:0.5rem 0;transition:color 0.3s;" onmouseover="this.style.color='var(--ember)'" onmouseout="this.style.color='var(--ink-soft)'">
+      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Back
+    </button>
+  </div>
+
+  <div class="story-hero" style="min-height:34vh;">
+    <div class="sglow"></div>
+    <p class="story-eyebrow reveal">Legal</p>
+    <h2 class="story-title reveal rd1" style="font-size:clamp(2rem,4.5vw,3.2rem);">Terms of <em>Service.</em></h2>
+    <p class="story-hero-sub reveal rd2">The agreement between you and A Story.</p>
+  </div>
+
+  <div class="legal-page-body">
+    <div class="legal-updated reveal">Last updated: June 16, 2026</div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">1</span> Agreement to these terms</h3>
+      <p>These Terms of Service ("Terms") govern your access to and use of our website, our waitlist, and the A Story app and related services (together, the "service"). By accessing or using the service, you agree to these Terms. If you do not agree, please do not use the service.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">2</span> Who we are</h3>
+      <p>The service is provided by A Story Technologies, Inc., a corporation organized under the laws of the State of Michigan ("A Story," "we," "us"). You can contact us at <a href="mailto:contact@astoryapp.com">contact@astoryapp.com</a>.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">3</span> Eligibility</h3>
+      <p>You must be at least 13 years old and able to enter into a binding contract to create an account or purchase the service. By using the service, you represent that you meet these requirements.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">4</span> What we provide</h3>
+      <p>A Story is a memory-keeping service: a warm, AI-guided experience that interviews a loved one, records their memories, and turns them into memory cards on a life timeline, a private digital archive, and, when you choose, a printed memory book. The specific features available, the plans we offer, and the details of any printed book order are described at the time of purchase and form part of these Terms.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">5</span> Your account</h3>
+      <p>You are responsible for the accuracy of the information you provide and for keeping your account credentials secure. You are responsible for activity that occurs under your account. Please notify us promptly at <a href="mailto:contact@astoryapp.com">contact@astoryapp.com</a> if you believe your account has been used without your authorization.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">6</span> Your content and ownership</h3>
+      <p>You and your family own your memories, recordings, transcripts, photographs, and stories ("Your Content"). You grant A Story a limited, non-exclusive license to use Your Content solely to provide the service — to conduct interviews, build and host your archive, produce your book, and support you. We will not sell Your Content, show it to advertisers, or use it to train outside artificial-intelligence models. The storyteller controls with whom Your Content is shared.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">7</span> Consent and accuracy</h3>
+      <p>You confirm that the person being recorded has consented to being recorded and to having their stories produced into an archive and book, and that you have the right to share the photographs and information you provide. A Story shapes stories as they are told and does not independently verify the factual accuracy of personal recollections.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">8</span> Promotions and founding families</h3>
+      <p>From time to time we offer promotions, such as the founding-families offer of three months free and a raffle for lifetime memberships. Each promotion is subject to its own official rules, which are made available at the time of the promotion and which control in the event of any conflict with these Terms. Promotions may be modified or withdrawn where permitted by law.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">9</span> Subscriptions, payments, and refunds</h3>
+      <p>A Story may be offered on a subscription basis. Subscriptions purchased through the Apple App Store or Google Play are billed through your store account and renew automatically unless cancelled at least 24 hours before the end of the current period. You can manage or cancel a subscription in your store account settings. Except where required by law, payments are non-refundable, and we do not provide refunds or credits for partial periods. Printed memory books are produced to order; once production has begun, an order cannot be cancelled or refunded, except where required by law or where a product arrives damaged or defective.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">10</span> App store terms</h3>
+      <p>If you download A Story from the Apple App Store, you acknowledge that these Terms are between you and A Story only, and not with Apple, and that Apple is not responsible for the app or its content. Apple has no obligation to furnish any maintenance or support for the app, and is not responsible for addressing any claims relating to the app. Apple and its subsidiaries are third-party beneficiaries of these Terms and may enforce them against you. When you download the app from Google Play, the applicable Google Play terms also apply. You agree to comply with all applicable third-party terms when using the app.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">11</span> Acceptable use</h3>
+      <p>You agree not to misuse the service — for example, by attempting to disrupt or interfere with it, accessing it unlawfully or without authorization, reverse-engineering it except where permitted by law, or using it to upload content that is illegal or that infringes the rights of others.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">12</span> Our intellectual property</h3>
+      <p>The A Story name, logo, app, website, and our editorial and production materials are owned by A Story Technologies, Inc. and are protected by intellectual-property laws. You may not use them without our prior written permission. Nothing in these Terms affects your ownership of Your Content.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">13</span> Third-party services</h3>
+      <p>We rely on third parties to operate the service — for example, hosting, printing, and payment providers. We are not responsible for the acts or omissions of these third parties, and their services may be subject to their own terms.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">14</span> Disclaimers</h3>
+      <p>The service is provided on an "as is" and "as available" basis. To the maximum extent permitted by law, we disclaim all warranties not expressly stated in these Terms, including implied warranties of merchantability, fitness for a particular purpose, and non-infringement. We do not warrant that the service will be uninterrupted, error-free, or completely secure.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">15</span> Limitation of liability</h3>
+      <p>To the maximum extent permitted by law, A Story will not be liable for any indirect, incidental, special, consequential, or punitive damages, or for any loss of data, even where we have been advised of the possibility of such damages. To the maximum extent permitted by law, A Story's total liability for all claims arising out of or relating to the service will not exceed the greater of (a) the total amount you paid to A Story in the twelve months before the event giving rise to the claim, or (b) one hundred U.S. dollars (US $100). Because the recordings and stories you entrust to us are irreplaceable, we encourage you to keep your own copies of any content that is important to you.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">16</span> Indemnification</h3>
+      <p>You agree to indemnify and hold harmless A Story and its officers, employees, and agents from any claims, damages, and expenses, including reasonable legal fees, arising out of your breach of these Terms, your misuse of the service, or Your Content.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">17</span> Governing law</h3>
+      <p>These Terms are governed by the laws of the State of Michigan, without regard to its conflict-of-laws principles. Subject to the Dispute Resolution section below, any claims not subject to arbitration will be brought exclusively in the state or federal courts located in Michigan, and you consent to the jurisdiction of those courts.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">18</span> Dispute resolution and arbitration</h3>
+      <p>Please read this section carefully, as it affects your legal rights. Before bringing a formal claim, you agree to first contact us at <a href="mailto:contact@astoryapp.com">contact@astoryapp.com</a> and attempt to resolve the dispute informally; if we cannot resolve it within 60 days, either party may proceed as set out below. Except for the exceptions noted here, any dispute arising out of or relating to these Terms or the service will be resolved by binding individual arbitration administered by the American Arbitration Association under its Consumer Arbitration Rules, rather than in court. Either party may instead bring an individual claim in small-claims court, and either party may seek injunctive relief to protect its intellectual property. All disputes will be conducted only on an individual basis, and not as a class, consolidated, or representative action. You may opt out of arbitration within 30 days of first accepting these Terms by emailing <a href="mailto:contact@astoryapp.com">contact@astoryapp.com</a> with your name and a statement that you wish to opt out; if you opt out, disputes will be resolved in the courts identified in the Governing Law section.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">19</span> Changes to these terms</h3>
+      <p>We may update these Terms from time to time. When we do, we will post the revised version here with a new "Last updated" date. Your continued use of the service after changes take effect means you accept the updated Terms.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">20</span> Contact us</h3>
+      <p>If you have any questions about these Terms, please email us at <a href="mailto:contact@astoryapp.com">contact@astoryapp.com</a>.</p>
+    </div>
+  </div>
+
+  <div class="story-cta">
+    <h2 class="reveal">Want to know how we <em>protect</em> your stories?</h2>
+    <p class="reveal">Read our Privacy Policy for the full picture.</p>
+    <button class="cta-btn reveal" onclick="closeTerms(); openPrivacyPolicy();">Read the Privacy Policy →</button>
+  </div>
+</div>
+
+
+<!-- PRIVACY POLICY PAGE — shown when footer "Privacy Policy" clicked -->
+<div id="privacy-policy-page" style="display:none;position:fixed;inset:0;z-index:500;overflow-y:auto;background:var(--paper);">
+  <div style="position:sticky;top:0;z-index:10;padding:1.1rem 3rem;display:flex;align-items:center;justify-content:space-between;background:rgba(239,230,212,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);">
+    <a tabindex="0" onclick="closePrivacyPolicy(); window.scrollTo({top:0,behavior: prefersReduced ? 'auto' : 'smooth'});" style="display:flex;align-items:center;gap:10px;font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:600;color:var(--ink);cursor:pointer;text-decoration:none;">
+      <svg aria-hidden="true" width="28" height="28" viewBox="0 0 64 64"><path d="M32 9 C24 23 16 41 11 55 L18 55 C27 41 30 25 32 13 Z" fill="#2B2117"/><path d="M32 9 C40 23 48 41 53 55 L46 55 C37 41 34 25 32 13 Z" fill="#2B2117"/><g transform="translate(23.33,29.33) scale(0.542)" fill="#B45A2B"><path d="M16 29 C16 29 4 20 4 11 C4 6 8 3 12 3 C14 3 16 5 16 6 C16 5 18 3 20 3 C24 3 28 6 28 11 C28 20 16 29 16 29 Z"/></g></svg>
+      Story
+    </a>
+    <button onclick="closePrivacyPolicy()" style="background:none;border:none;cursor:pointer;font-family:'Figtree',sans-serif;font-size:0.76rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-soft);display:flex;align-items:center;gap:0.4rem;padding:0.5rem 0;transition:color 0.3s;" onmouseover="this.style.color='var(--ember)'" onmouseout="this.style.color='var(--ink-soft)'">
+      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Back
+    </button>
+  </div>
+
+  <div class="story-hero" style="min-height:34vh;">
+    <div class="sglow"></div>
+    <p class="story-eyebrow reveal">Legal</p>
+    <h2 class="story-title reveal rd1" style="font-size:clamp(2rem,4.5vw,3.2rem);">Privacy <em>Policy.</em></h2>
+    <p class="story-hero-sub reveal rd2">The most precious things a family owns. We treat them that way.</p>
+  </div>
+
+  <div class="legal-page-body">
+    <div class="legal-updated reveal">Last updated: June 16, 2026</div>
+
+    <p class="legal-intro reveal">A Story Technologies, Inc. ("A Story," "we," "us") respects your privacy and the trust you place in us. This policy explains what we collect, how we use it, and the choices you have. It applies to our website, our waitlist, and the A Story app.</p>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">1</span> Who we are</h3>
+      <p>A Story is operated by A Story Technologies, Inc., a corporation organized under the laws of the State of Michigan, United States. You can reach us at any time at <a href="mailto:contact@astoryapp.com">contact@astoryapp.com</a>.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">2</span> Information we collect</h3>
+      <p>We collect the following categories of information:</p>
+      <ul>
+        <li>Account and waitlist information, including your name, phone number and email address.</li>
+        <li>The memories themselves — the audio recordings, transcripts, photographs, and stories that you and your storyteller share. This is the heart of what we hold, and we treat it as highly sensitive personal information.</li>
+        <li>Payment information, which is processed by our third-party payment providers. We do not collect or store full payment card numbers.</li>
+        <li>Usage information, such as device details and app activity, collected through standard analytics in order to operate, secure, and improve the service.</li>
+      </ul>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">3</span> How we use your information</h3>
+      <p>We use your information to deliver A Story — to conduct the interviews, build the memory cards and life timeline, produce your printed book, and host your archive — as well as to communicate with you, process payments, provide customer support, maintain security, and comply with our legal obligations. We do not sell your personal information or your family's stories.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">4</span> Your stories, your control</h3>
+      <p>Your recordings, transcripts, photographs, and stories are private to the storyteller and the people they choose to share them with. The storyteller is always the one who decides where a memory goes — nothing is shared without their permission. We will never sell your family's stories, show them to advertisers, or use them to train outside artificial-intelligence models. They are not a product.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">5</span> How we use artificial intelligence</h3>
+      <p>A Story uses artificial intelligence to conduct guided interviews and to help shape what is shared into a readable story. We use your content only to provide and improve the A Story service itself. We do not use your family's stories, recordings, or transcripts to train third-party or external artificial-intelligence models.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">6</span> Consent of the person being recorded</h3>
+      <p>Because A Story records a person telling their life story, that person's consent matters to us. We obtain the storyteller's consent before recording begins and before their stories are produced into an archive or book. If you set up A Story on behalf of another person, you are responsible for ensuring that the storyteller, and anyone else whose voice is recorded, understands and agrees to being recorded.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">7</span> How we share information</h3>
+      <p>We share information only with service providers who help us operate A Story — such as secure cloud hosting, book printing and fulfillment, payment processing, and analytics — and only under agreements that limit their use of it to providing services to us. We may also disclose information where we are required to do so by law, or where we believe in good faith that disclosure is necessary to protect the rights, property, or safety of our users, the public, or A Story.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">8</span> How long we keep your information</h3>
+      <p>Because A Story is built to preserve memories for the long term, we retain your content for as long as your account or archive remains active. You may request deletion of your content at any time by contacting us at <a href="mailto:contact@astoryapp.com">contact@astoryapp.com</a>, and we will delete it within thirty (30) days, except where we must retain certain information to complete a transaction, resolve disputes, or comply with legal obligations, and except for residual copies that are removed from routine backups in the ordinary course. If your subscription lapses, we will retain your archive for a grace period and will notify you before taking any action that would affect access to your stories. If a storyteller passes away, their stories remain protected under this policy, and we will work with the storyteller's family in keeping with the storyteller's wishes and applicable law.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">9</span> Security</h3>
+      <p>We protect your information using administrative, technical, and organizational safeguards appropriate to its sensitivity. Recordings and transcripts are encrypted in transit and at rest, and access is restricted to personnel and providers who need it to operate the service. No method of storage or transmission is perfectly secure, but we work continually to safeguard the irreplaceable content you trust us with.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">10</span> Your privacy rights</h3>
+      <p>Subject to applicable law, you may request to access, correct, delete, or receive a portable copy of your personal information, and you may opt out of marketing communications at any time. To exercise these rights, email us at <a href="mailto:contact@astoryapp.com">contact@astoryapp.com</a>.</p>
+      <p><span class="legal-sub">California residents.</span> Under the California Consumer Privacy Act, as amended, you have the right to know what personal information we collect and how we use it, to request deletion or correction of your personal information, and to opt out of any "sale" or "sharing" of personal information. We do not sell or share your personal information as those terms are defined under California law.</p>
+      <p><span class="legal-sub">EEA and UK residents.</span> Where applicable data-protection law governs, we process your personal information on the legal basis of performing our contract with you, your consent, and our legitimate interests in operating and improving the service. You have the right to access, rectify, erase, restrict, or object to processing, to data portability, and to lodge a complaint with your local supervisory authority.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">11</span> Children</h3>
+      <p>A Story is intended for people aged 13 and older, and we do not knowingly collect personal information directly from children under the age of 13. Where a storyteller's memories naturally mention children or other family members, that content is treated as part of the storyteller's stories and is protected under this policy.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">12</span> Where your information is stored</h3>
+      <p>A Story is operated from the United States, and your information is stored and processed in the United States. If you access the service from outside the United States, you understand that your information will be transferred to and processed in the United States.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">13</span> Marketing and waitlist</h3>
+      <p>If you join our waitlist or sign up for updates, we will send you occasional messages about A Story — no spam, just a gentle note when there is something worth telling you. You can opt out of these messages at any time using the unsubscribe link or by contacting us.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">14</span> Changes to this policy</h3>
+      <p>We may update this policy from time to time. When we do, we will post the revised version here with a new "Last updated" date, and we will notify you of material changes by email or through the app before they take effect.</p>
+    </div>
+
+    <div class="legal-section reveal">
+      <h3><span class="legal-num">15</span> Contact us</h3>
+      <p>If you have any questions about this policy or your privacy, please email us at <a href="mailto:contact@astoryapp.com">contact@astoryapp.com</a>.</p>
+    </div>
+  </div>
+
+  <div class="story-cta">
+    <h2 class="reveal">Want to know the <em>full agreement?</em></h2>
+    <p class="reveal">Read our Terms of Service for the complete details.</p>
+    <button class="cta-btn reveal" onclick="closePrivacyPolicy(); openTerms();">Read the Terms of Service →</button>
+  </div>
+</div>
+
+
 <footer>
   <div class="f-logo">
     <svg width="20" height="20" viewBox="0 0 64 64"><path d="M32 9 C24 23 16 41 11 55 L18 55 C27 41 30 25 32 13 Z" fill="#EFE6D4"/><path d="M32 9 C40 23 48 41 53 55 L46 55 C37 41 34 25 32 13 Z" fill="#EFE6D4"/><g transform="translate(23.33,29.33) scale(0.542)" fill="#C7A24E"><path d="M16 29 C16 29 4 20 4 11 C4 6 8 3 12 3 C14 3 16 5 16 6 C16 5 18 3 20 3 C24 3 28 6 28 11 C28 20 16 29 16 29 Z"/></g></svg>
@@ -1004,6 +1282,8 @@ footer .f-links a:focus-visible{outline:2px solid var(--gold);outline-offset:3px
   <div class="f-links">
     <a tabindex="0" onclick="openAbout()">About/Mission</a>
     <a tabindex="0" onclick="openFaq()">FAQ</a>
+    <a tabindex="0" onclick="openTerms()">Terms of Service</a>
+    <a tabindex="0" onclick="openPrivacyPolicy()">Privacy Policy</a>
   </div>
   <div class="f-meta">© 2026 · <a href="mailto:contact@astoryapp.com">contact@astoryapp.com</a> · iOS &amp; Android coming soon</div>
 </footer>
@@ -1131,7 +1411,6 @@ function resetDemo(){
 /* unlock content gate on "Hear it in action" click */
 function unlockContent(){
   contentUnlocked=true;
-  // iOS Safari: play() MUST be called synchronously inside the touch handler
   music.play().then(()=>{fadeTo(0.55,1400);musicMuted=false;updateMusicIcon();}).catch(()=>{});
   musicWanted=true;
   const gate=document.getElementById('content-gate');
@@ -1158,19 +1437,15 @@ if(tlWrapper && tlHint){
 }
 
 /* Our Story overlay */
-/* Our Story overlay */
 function ourStoryTrap(e){ trapFocus(e, 'our-story-page'); }
 function openOurStory(){
   const page=document.getElementById('our-story-page');
   page.style.display='block';
   document.body.style.overflow='hidden';
   page.scrollTop=0;
-  // re-run reveals inside overlay
   page.querySelectorAll('.reveal:not(.in)').forEach(el=>io.observe(el));
-  // move focus into the overlay
   const closeBtn = page.querySelector('button');
   closeBtn.focus();
-  // trap focus inside overlay
   page.addEventListener('keydown', ourStoryTrap);
 }
 
@@ -1232,6 +1507,44 @@ function closeFaq(){
   page.style.display = 'none';
   document.body.style.overflow = '';
   page.removeEventListener('keydown', faqTrap);
+}
+
+/* Terms of Service overlay */
+function termsTrap(e){ trapFocus(e, 'terms-page'); }
+function openTerms(){
+  const page=document.getElementById('terms-page');
+  page.style.display='block';
+  document.body.style.overflow='hidden';
+  page.scrollTop=0;
+  page.querySelectorAll('.reveal:not(.in)').forEach(el=>io.observe(el));
+  const closeBtn = page.querySelector('button');
+  closeBtn.focus();
+  page.addEventListener('keydown', termsTrap);
+}
+function closeTerms(){
+  const page = document.getElementById('terms-page');
+  page.style.display = 'none';
+  document.body.style.overflow = '';
+  page.removeEventListener('keydown', termsTrap);
+}
+
+/* Privacy Policy overlay */
+function privacyPolicyTrap(e){ trapFocus(e, 'privacy-policy-page'); }
+function openPrivacyPolicy(){
+  const page=document.getElementById('privacy-policy-page');
+  page.style.display='block';
+  document.body.style.overflow='hidden';
+  page.scrollTop=0;
+  page.querySelectorAll('.reveal:not(.in)').forEach(el=>io.observe(el));
+  const closeBtn = page.querySelector('button');
+  closeBtn.focus();
+  page.addEventListener('keydown', privacyPolicyTrap);
+}
+function closePrivacyPolicy(){
+  const page = document.getElementById('privacy-policy-page');
+  page.style.display = 'none';
+  document.body.style.overflow = '';
+  page.removeEventListener('keydown', privacyPolicyTrap);
 }
 
 /* FAQ accordion */
