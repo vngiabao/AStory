@@ -797,10 +797,10 @@ footer .f-links a:focus-visible{outline:2px solid var(--gold);outline-offset:3px
     Story
   </div>
   <div class="f-links">
-    <a tabindex="0" onclick="closeOurStory(); openAbout();">About/Mission</a>
-    <a tabindex="0" onclick="closeOurStory(); openFaq();">FAQ</a>
-    <a tabindex="0" onclick="closeOurStory(); openTerms();">Terms of Service</a>
-    <a tabindex="0" onclick="closeOurStory(); openPrivacyPolicy();">Privacy Policy</a>
+    <a tabindex="0" onclick="openAbout();">About/Mission</a>
+    <a tabindex="0" onclick="openFaq();">FAQ</a>
+    <a tabindex="0" onclick="openTerms();">Terms of Service</a>
+    <a tabindex="0" onclick="openPrivacyPolicy();">Privacy Policy</a>
   </div>
   <div class="f-meta">© 2026 · <a href="mailto:contact@astoryapp.com">contact@astoryapp.com</a> · iOS &amp; Android coming soon</div>
 </footer>
@@ -883,7 +883,7 @@ footer .f-links a:focus-visible{outline:2px solid var(--gold);outline-offset:3px
   <div class="story-cta">
     <h2 class="reveal">Want the <em>full story</em> behind A Story?</h2>
     <p class="reveal">Read a note from our founder on why this exists.</p>
-    <button class="cta-btn reveal" onclick="closeAbout(); openOurStory();">Read Our Story →</button>
+    <button class="cta-btn reveal" onclick="openOurStory();">Read Our Story →</button>
   </div>
 </div>
 
@@ -1152,7 +1152,7 @@ footer .f-links a:focus-visible{outline:2px solid var(--gold);outline-offset:3px
   <div class="story-cta">
     <h2 class="reveal">Want to know how we <em>protect</em> your stories?</h2>
     <p class="reveal">Read our Privacy Policy for the full picture.</p>
-    <button class="cta-btn reveal" onclick="closeTerms(); openPrivacyPolicy();">Read the Privacy Policy →</button>
+    <button class="cta-btn reveal" onclick="openPrivacyPolicy();">Read the Privacy Policy →</button>
   </div>
 </div>
 
@@ -1269,7 +1269,7 @@ footer .f-links a:focus-visible{outline:2px solid var(--gold);outline-offset:3px
   <div class="story-cta">
     <h2 class="reveal">Want to know the <em>full agreement?</em></h2>
     <p class="reveal">Read our Terms of Service for the complete details.</p>
-    <button class="cta-btn reveal" onclick="closePrivacyPolicy(); openTerms();">Read the Terms of Service →</button>
+    <button class="cta-btn reveal" onclick="openTerms();">Read the Terms of Service →</button>
   </div>
 </div>
 
@@ -1411,6 +1411,7 @@ function resetDemo(){
 /* unlock content gate on "Hear it in action" click */
 function unlockContent(){
   contentUnlocked=true;
+  // iOS Safari: play() MUST be called synchronously inside the touch handler
   music.play().then(()=>{fadeTo(0.55,1400);musicMuted=false;updateMusicIcon();}).catch(()=>{});
   musicWanted=true;
   const gate=document.getElementById('content-gate');
@@ -1436,18 +1437,73 @@ if(tlWrapper && tlHint){
   });
 }
 
-/* Our Story overlay */
-function ourStoryTrap(e){ trapFocus(e, 'our-story-page'); }
-function openOurStory(){
-  const page=document.getElementById('our-story-page');
-  page.style.display='block';
-  document.body.style.overflow='hidden';
-  page.scrollTop=0;
+/* ───────── Overlay pages: shared show/hide + browser history support ───────── */
+const OVERLAY_PAGES = {
+  'our-story': 'our-story-page',
+  'about': 'about-page',
+  'faq': 'faq-page',
+  'terms': 'terms-page',
+  'privacy': 'privacy-policy-page'
+};
+let activeOverlay = null;        // currently open overlay key, or null
+let suppressHistory = false;     // true while reacting to popstate, to avoid re-pushing
+
+function showOverlayPage(key){
+  const id = OVERLAY_PAGES[key];
+  const page = document.getElementById(id);
+  if(!page) return;
+
+  // hide any other open overlay first (no nested overlays)
+  Object.entries(OVERLAY_PAGES).forEach(([k, otherId]) => {
+    if(k !== key){
+      const other = document.getElementById(otherId);
+      if(other && other.style.display === 'block'){
+        other.style.display = 'none';
+        other.removeEventListener('keydown', overlayTrapHandlers[k]);
+      }
+    }
+  });
+
+  page.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  page.scrollTop = 0;
   page.querySelectorAll('.reveal:not(.in)').forEach(el=>io.observe(el));
   const closeBtn = page.querySelector('button');
-  closeBtn.focus();
-  page.addEventListener('keydown', ourStoryTrap);
+  if(closeBtn) closeBtn.focus();
+  page.addEventListener('keydown', overlayTrapHandlers[key]);
+
+  activeOverlay = key;
+
+  if(!suppressHistory){
+    history.pushState({overlay:key}, '', '#'+key);
+  }
 }
+
+function hideOverlayPage(key){
+  const id = OVERLAY_PAGES[key];
+  const page = document.getElementById(id);
+  if(!page) return;
+  page.style.display = 'none';
+  document.body.style.overflow = '';
+  page.removeEventListener('keydown', overlayTrapHandlers[key]);
+  if(activeOverlay === key) activeOverlay = null;
+}
+
+/* Call this when actually returning to the landing page (Back button, logo click) */
+function closeOverlayToLanding(key){
+  hideOverlayPage(key);
+  if(!suppressHistory){
+    history.pushState({overlay:null}, '', window.location.pathname + window.location.search);
+  }
+}
+
+const overlayTrapHandlers = {
+  'our-story': e=>trapFocus(e,'our-story-page'),
+  'about': e=>trapFocus(e,'about-page'),
+  'faq': e=>trapFocus(e,'faq-page'),
+  'terms': e=>trapFocus(e,'terms-page'),
+  'privacy': e=>trapFocus(e,'privacy-policy-page')
+};
 
 // no behind-the-scence delay Tab
 function trapFocus(e, pageId) {
@@ -1464,88 +1520,53 @@ function trapFocus(e, pageId) {
   }
 }
 
-function closeOurStory(){
-  const page = document.getElementById('our-story-page');
-  page.style.display = 'none';
-  document.body.style.overflow = '';
-  page.removeEventListener('keydown', ourStoryTrap);
-}
+/* Our Story overlay */
+function openOurStory(){ showOverlayPage('our-story'); }
+function closeOurStory(){ closeOverlayToLanding('our-story'); }
 
 /* About/Mission overlay */
-function aboutTrap(e){ trapFocus(e, 'about-page'); }
-function openAbout(){
-  const page=document.getElementById('about-page');
-  page.style.display='block';
-  document.body.style.overflow='hidden';
-  page.scrollTop=0;
-  page.querySelectorAll('.reveal:not(.in)').forEach(el=>io.observe(el));
-  const closeBtn = page.querySelector('button');
-  closeBtn.focus();
-  page.addEventListener('keydown', aboutTrap);
-}
-function closeAbout(){
-  const page = document.getElementById('about-page');
-  page.style.display = 'none';
-  document.body.style.overflow = '';
-  page.removeEventListener('keydown', aboutTrap);
-}
+function openAbout(){ showOverlayPage('about'); }
+function closeAbout(){ closeOverlayToLanding('about'); }
 
 /* FAQ overlay */
-function faqTrap(e){ trapFocus(e, 'faq-page'); }
-function openFaq(){
-  const page=document.getElementById('faq-page');
-  page.style.display='block';
-  document.body.style.overflow='hidden';
-  page.scrollTop=0;
-  page.querySelectorAll('.reveal:not(.in)').forEach(el=>io.observe(el));
-  const closeBtn = page.querySelector('button');
-  closeBtn.focus();
-  page.addEventListener('keydown', faqTrap);
-}
-function closeFaq(){
-  const page = document.getElementById('faq-page');
-  page.style.display = 'none';
-  document.body.style.overflow = '';
-  page.removeEventListener('keydown', faqTrap);
-}
+function openFaq(){ showOverlayPage('faq'); }
+function closeFaq(){ closeOverlayToLanding('faq'); }
 
 /* Terms of Service overlay */
-function termsTrap(e){ trapFocus(e, 'terms-page'); }
-function openTerms(){
-  const page=document.getElementById('terms-page');
-  page.style.display='block';
-  document.body.style.overflow='hidden';
-  page.scrollTop=0;
-  page.querySelectorAll('.reveal:not(.in)').forEach(el=>io.observe(el));
-  const closeBtn = page.querySelector('button');
-  closeBtn.focus();
-  page.addEventListener('keydown', termsTrap);
-}
-function closeTerms(){
-  const page = document.getElementById('terms-page');
-  page.style.display = 'none';
-  document.body.style.overflow = '';
-  page.removeEventListener('keydown', termsTrap);
-}
+function openTerms(){ showOverlayPage('terms'); }
+function closeTerms(){ closeOverlayToLanding('terms'); }
 
 /* Privacy Policy overlay */
-function privacyPolicyTrap(e){ trapFocus(e, 'privacy-policy-page'); }
-function openPrivacyPolicy(){
-  const page=document.getElementById('privacy-policy-page');
-  page.style.display='block';
-  document.body.style.overflow='hidden';
-  page.scrollTop=0;
-  page.querySelectorAll('.reveal:not(.in)').forEach(el=>io.observe(el));
-  const closeBtn = page.querySelector('button');
-  closeBtn.focus();
-  page.addEventListener('keydown', privacyPolicyTrap);
-}
-function closePrivacyPolicy(){
-  const page = document.getElementById('privacy-policy-page');
-  page.style.display = 'none';
-  document.body.style.overflow = '';
-  page.removeEventListener('keydown', privacyPolicyTrap);
-}
+function openPrivacyPolicy(){ showOverlayPage('privacy'); }
+function closePrivacyPolicy(){ closeOverlayToLanding('privacy'); }
+
+/* Browser back/forward support */
+window.addEventListener('popstate', (e) => {
+  suppressHistory = true;
+  const key = e.state && e.state.overlay;
+  if(key && OVERLAY_PAGES[key]){
+    showOverlayPage(key);
+  } else if(activeOverlay){
+    hideOverlayPage(activeOverlay);
+  }
+  suppressHistory = false;
+});
+
+/* Deep-link support: opening the page directly on a hash like #faq reopens that page */
+(function initOverlayFromHash(){
+  const hash = window.location.hash.replace('#','');
+  if(hash && OVERLAY_PAGES[hash]){
+    suppressHistory = true;
+    // unlock content gate first if needed so reveals behave correctly
+    if(typeof unlockContent === 'function'){
+      const gate = document.getElementById('content-gate');
+      if(gate && gate.style.display === 'none') unlockContent();
+    }
+    showOverlayPage(hash);
+    history.replaceState({overlay:hash}, '', '#'+hash);
+    suppressHistory = false;
+  }
+})();
 
 /* FAQ accordion */
 document.querySelectorAll('.faq-q').forEach(btn => {
