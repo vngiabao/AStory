@@ -66,9 +66,13 @@ nav.scrolled{background:rgba(239,230,212,0.92);backdrop-filter:blur(12px);border
 .music-btn.playing{color:var(--ember);border-color:var(--ember);background:rgba(180,90,43,0.08);}
 .music-btn.playing svg{animation:musicPulse 1.6s ease-in-out infinite;}
 @keyframes musicPulse{0%,100%{opacity:0.7;}50%{opacity:1;}}
+.story-icon-btn{display:none;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:none;color:var(--ink-soft);align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s;padding:0;text-decoration:none;}
+.story-icon-btn:hover{color:var(--ember);border-color:rgba(180,90,43,0.4);}
+.story-icon-btn svg{width:15px;height:15px;}
 @media(max-width:600px){
   nav{padding:1rem 1.25rem;}
   .nav-link{display:none;}
+  .story-icon-btn{display:flex;}
   .nav-cta{font-size:0.7rem;padding:0.4rem 0.9rem;letter-spacing:0.08em;}
   .nav-logo{font-size:1.25rem;}
   .nav-logo svg{width:26px;height:26px;}
@@ -107,6 +111,7 @@ nav.scrolled{background:rgba(239,230,212,0.92);backdrop-filter:blur(12px);border
 .nav-logo:focus-visible,
 .nav-link:focus-visible {outline: 2px solid var(--ember); outline-offset: 4px; border-radius: 2px; }
 .music-btn:focus-visible {outline: 2px solid var(--ember); outline-offset: 3px; border-color: var(--ember); }
+.story-icon-btn:focus-visible {outline: 2px solid var(--ember); outline-offset: 3px; border-color: var(--ember); }
 .btn-primary:focus-visible,
 .btn-ghost:focus-visible,
 .nav-cta:focus-visible,
@@ -493,6 +498,9 @@ footer .f-links a:focus-visible{outline:2px solid var(--gold);outline-offset:3px
     Story
   </a>
   <div style="display:flex;align-items:center;gap:1rem;">
+    <button id="story-toggle" class="story-icon-btn" tabindex="0" onclick="openOurStory()" aria-label="Our Story" title="Our Story">
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    </button>
     <button id="music-toggle" class="music-btn" onclick="toggleMusic()" aria-label="Toggle music" title="Unmute music">
       <svg id="icon-sound-on" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg>
       <svg id="icon-sound-off" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/><line x1="3" y1="3" x2="21" y2="21" stroke="currentColor" stroke-width="1.6"/></svg>
@@ -1453,6 +1461,8 @@ function showOverlayPage(key){
   const page = document.getElementById(id);
   if(!page) return;
 
+  const cameFromLanding = (activeOverlay === null);
+
   // hide any other open overlay first (no nested overlays)
   Object.entries(OVERLAY_PAGES).forEach(([k, otherId]) => {
     if(k !== key){
@@ -1475,7 +1485,15 @@ function showOverlayPage(key){
   activeOverlay = key;
 
   if(!suppressHistory){
-    history.pushState({overlay:key}, '', '#'+key);
+    // Only ADD a history entry the first time we leave the landing page.
+    // Switching between overlays (About -> FAQ -> Terms) replaces the
+    // current entry instead, so there's always just ONE "back" step
+    // needed to return to — and then exit from — the landing page.
+    if(cameFromLanding){
+      history.pushState({overlay:key}, '', '#'+key);
+    } else {
+      history.replaceState({overlay:key}, '', '#'+key);
+    }
   }
 }
 
@@ -1493,7 +1511,10 @@ function hideOverlayPage(key){
 function closeOverlayToLanding(key){
   hideOverlayPage(key);
   if(!suppressHistory){
-    history.pushState({overlay:null}, '', window.location.pathname + window.location.search);
+    // Replace, don't push — this collapses the whole "visited overlays" trail
+    // back into the single landing-page entry, so the very next browser
+    // back press exits the site instead of replaying overlay history.
+    history.replaceState({overlay:null}, '', window.location.pathname + window.location.search);
   }
 }
 
